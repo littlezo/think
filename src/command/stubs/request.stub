@@ -1,0 +1,15 @@
+<?php
+
+namespace {NAMESPACE};
+
+use littler\Request;
+
+class {CLASS}Request extends Request
+{
+   public function rule()
+   {
+        return [
+            // rule
+        ];
+   }
+}

@@ -1,0 +1,47 @@
+{
+	"name": "littler/think",
+	"description": "AI CURD",
+	"license": "MPL-2.0",
+	"authors": [
+		{
+			"name": "@小小只^v^",
+			"email": "littlezov@qq.com"
+		}
+	],
+	"homepage": "https://github.com/little/ai-code",
+	"keywords": [
+		"codeAi"
+	],
+	"require": {
+		"php": "^7.4 || ^8.0",
+		"ext-json": "*",
+		"ext-redis": "*",
+		"topthink/framework": "^6.0",
+		"topthink/think-orm": "^2.0",
+		"topthink/think-migration": "^3.0",
+		"symfony/finder": "*",
+		"guzzlehttp/guzzle": "*",
+		"nikic/php-parser": "^4.10",
+		"dragonmantank/cron-expression": "^3.1",
+		"jaguarjack/think-filesystem-cloud": "^1.0"
+	},
+	"require-dev": {
+		"nikic/php-parser": "^4.10"
+	},
+	"autoload": {
+		"psr-4": {
+			"littler\\": "src/"
+		},
+		"files": [
+			"src/helper.php",
+			"stubs/load_stubs.php"
+		]
+	},
+	"extra": {
+		"think": {
+			"services": [
+				"littler\\Service"
+			]
+		}
+	}
+}
