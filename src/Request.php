@@ -40,7 +40,7 @@ class Request extends \think\Request
     public function __construct()
     {
         parent::__construct();
-
+        // $this->filterEmptyField();
         $this->validate();
     }
 
@@ -51,14 +51,17 @@ class Request extends \think\Request
      */
     public function filterEmptyField(): Request
     {
+        // dd(Utils::filterEmptyValue($this->param));
         if ($this->isGet()) {
             $this->get = Utils::filterEmptyValue($this->get);
         } elseif ($this->isPost()) {
             $this->post = Utils::filterEmptyValue($this->post);
+        } elseif ($this->isPut()) {
+            $this->put = Utils::filterEmptyValue($this->post);
         } else {
-            $this->put = Utils::filterEmptyValue($this->put);
+            $this->param = Utils::filterEmptyValue($this->param);
         }
-
+        // dd($this);
         return $this;
     }
 

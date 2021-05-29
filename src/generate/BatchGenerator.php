@@ -51,8 +51,13 @@ class BatchGenerator
         $tables_array = [];
         foreach ($tables as $item) {
             $table = Utils::tableWithoutPrefix($item);
+            $table_info = explode('_', $table);
             $module = explode('_', $table)[0];
-            if ($module == 'migrations') {
+            // dd($module);
+            if (in_array('reserve', $table_info)) {
+                continue;
+            }
+            if (in_array('migrations', $table_info)) {
                 continue;
             }
             $module_exists = App::getModuleInfo($module)['name'] ?? false;

@@ -77,11 +77,11 @@ class Generator
             }
 
             // 只有创建了 Controller 最后成功才写入 route
-            if ($params['create_controller']) {
-                (new Route())->controller($controller['controller'])
-                    ->restful($controller['restful'])
-                    ->done();
-            }
+            // if ($params['create_controller']) {
+            //     (new Route())->controller($controller['controller'])
+            //         ->restful($controller['restful'])
+            //         ->done();
+            // }
         } catch (\Throwable $exception) {
             if (! $exception instanceof TableExistException) {
                 $this->rollback($files, $migration);

@@ -218,7 +218,7 @@ class Utils
                 unset($data[$k]);
             }
         }
-
+        unset($data->create_time,$data->update_time,$data->delete_time);
         return $data;
     }
 

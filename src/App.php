@@ -153,11 +153,9 @@ class App
             if (! is_dir($module)) {
                 unset($modules[$key]);
             }
-
             $module .= DIRECTORY_SEPARATOR;
         }
-
-        return $modules;
+        return array_unique($modules);
     }
 
     /**
@@ -168,11 +166,7 @@ class App
         $modules = [];
         if ($select) {
             foreach (self::getModulesDirectory() as $module) {
-                $moduleInfo = self::getModuleInfo($module);
-                $modules[] = [
-                    'value' => $moduleInfo['name'],
-                    'title' => $moduleInfo['title'],
-                ];
+                $modules[] = self::getModuleInfo($module);
             }
         } else {
             foreach (self::getModulesDirectory() as $module) {
@@ -180,13 +174,23 @@ class App
                 $modules[$moduleInfo['name']] = $moduleInfo['title'];
             }
         }
-
         return $modules;
     }
 
     /**
      * 获取可用模块.
      */
+    public static function getEnabledModules(): array
+    {
+        $modules = [];
+        foreach (self::getModulesInfo() as $module) {
+            if (! empty($module) && $module['enable']) {
+                $modules[] = $module;
+            }
+        }
+        return $modules;
+    }
+
     public static function getEnabledService(): array
     {
         $services = [];
@@ -201,7 +205,6 @@ class App
                 }
             }
         }
-        // dd($services);
 
         return $services;
     }

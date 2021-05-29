@@ -130,12 +130,13 @@ class Query extends \think\db\Query
     public function quickSearch($params = []): Query
     {
         $requestParams = \request()->param();
-
+        // dd($requestParams);
         if (empty($params) && empty($requestParams)) {
             return $this;
         }
 
         foreach ($requestParams as $field => $value) {
+            // dd($value);
             if (isset($params[$field])) {
                 // ['>', value] || value
                 if (is_array($params[$field])) {
@@ -144,34 +145,35 @@ class Query extends \think\db\Query
                     $this->where($field, $value);
                 }
             } else {
-                // 区间范围 start_数据库字段 & end_数据库字段
-                $startPos = strpos($field, 'start_');
-                if ($startPos === 0) {
-                    $this->where(str_replace('start_', '', $field), '>=', strtotime($value));
-                }
-                $endPos = strpos($field, 'end_');
-                if ($endPos === 0) {
-                    $this->where(str_replace('end_', '', $field), '<=', strtotime($value));
-                }
-                // 模糊搜索
-                if (Str::contains($field, 'like')) {
-                    [$operate, $field] = explode('_', $field);
-                    if ($operate === 'like') {
-                        $this->whereLike($field, $value);
-                    } elseif ($operate === '%like') {
-                        $this->whereLeftLike($field, $value);
-                    } else {
-                        $this->whereRightLike($field, $value);
-                    }
-                }
+                [$condition] = explode('_', $field);
+                // $startPos = strpos($field, 'start_');
+                // $endPos = strpos($field, 'end_');
+                // 时间区间范围 start_数据库字段 & end_数据库字段
 
-                // = 值搜索
-                if ($value || is_numeric($value)) {
-                    $this->where($field, $value);
+                if ($condition === 0) {
+                    $this->where(str_replace('start_', '', $field), '>=', strtotime($value));
+                } elseif ($condition === 0) {
+                    $this->where(str_replace('end_', '', $field), '<=', strtotime($value));
+                // 模糊搜索
+                } elseif ($condition === 'like') {
+                    $this->whereLike(str_replace('like_', '', $field), $value);
+                // 左模糊搜索
+                } elseif ($condition === '%like') {
+                    $this->whereLeftLike(str_replace('%like_', '', $field), $value);
+                // 右模糊搜索
+                } elseif ($condition === 'like%') {
+                    $this->whereRightLike(str_replace('like%_', '', $field), $value);
+                // 区间范围查询
+                } elseif ($condition === 'max') {
+                    $this->where(str_replace('max_', '', $field), '<=', $value);
+                } elseif ($condition === 'min') {
+                    $this->where(str_replace('min_', '', $field), '>=', $value);
+                //等值搜索 ! in_array($operate, ['like', 'max', 'min', '%like', 'like%', 'end', 'start'])
+                } elseif (($value) && ! in_array($field, ['size', 'page'])) {
+                    $this->where($field, '=', $value);
                 }
             }
         }
-
         return $this;
     }
 
@@ -214,7 +216,7 @@ class Query extends \think\db\Query
      */
     public function whereLeftLike(string $field, $condition, string $logic = 'AND'): Query
     {
-        return $this->where($field, $condition, $logic, 'left');
+        return $this->whereLike($field, $condition, $logic, 'left');
     }
 
     /**
@@ -222,7 +224,7 @@ class Query extends \think\db\Query
      */
     public function whereRightLike(string $field, $condition, string $logic = 'AND'): Query
     {
-        return $this->where($field, $condition, $logic, 'right');
+        return $this->whereLike($field, $condition, $logic, 'right');
     }
 
     /**
@@ -246,7 +248,7 @@ class Query extends \think\db\Query
     public function paginate($listRows = null, $simple = false): Paginator
     {
         if (! $listRows) {
-            $limit = \request()->param('limit');
+            $limit = \request()->param('size');
             $listRows = $limit ?: BaseModel::$limit;
         }
         // dd($simple);

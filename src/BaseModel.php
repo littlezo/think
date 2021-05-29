@@ -27,11 +27,11 @@ abstract class BaseModel extends \think\Model
     use BaseOptionsTrait;
     use RewriteTrait;
 
-    protected $createTime = 'created_time';
+    protected $createTime = 'create_time';
 
-    protected $updateTime = 'updated_time';
+    protected $updateTime = 'update_time';
 
-    protected $deleteTime = 'deleted_time';
+    protected $deleteTime = 'delete_time';
 
     protected $defaultSoftDelete = 0;
 
@@ -45,5 +45,19 @@ abstract class BaseModel extends \think\Model
     public function hasField(string $field)
     {
         return property_exists($this, 'field') && in_array($field, $this->field);
+    }
+
+    public static function onBeforeInsert($data)
+    {
+        // 新增前移除主键
+        $pk = $data->getAutoPk();
+        unset($data->{$pk});
+        return $data;
+    }
+
+    public static function onBeforeWrite($data)
+    {
+        // 写入前移除空字段
+        return Utils::filterEmptyValue($data);
     }
 }

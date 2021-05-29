@@ -46,7 +46,7 @@ class Route extends Factory
     {
         $this->init();
         $route = [];
-
+        return false;
         if (! $params['extra']['not_route'] ?? false) {
             if ($this->layer !== 'api') {
                 $route[] = sprintf("\$router->group('api/%s', function () use (\$router) {", $this->layer);

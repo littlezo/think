@@ -99,7 +99,7 @@ class Module
             $this->moduleDir . 'Service.php',
             $this->moduleDir . 'config/config.json',
             $this->moduleDir . 'config/event.json',
-            $this->moduleDir . 'route.php',
+            // $this->moduleDir . 'route.php',
         ];
     }
 
@@ -138,7 +138,7 @@ class Module
     {
         $this->createDir();
         $this->createService();
-        $this->createRoute();
+        // $this->createRoute();
         $this->createConfig();
         $this->createEvent();
         $this->createModuleJson();

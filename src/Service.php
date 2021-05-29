@@ -45,6 +45,7 @@ class Service extends \think\Service
         $this->registerLoadModule();
         $this->loadModuleRoute();
         $this->registerServices();
+        $this->registerEnabledModules();
     }
 
     protected function registerCommands(): void
@@ -109,6 +110,7 @@ class Service extends \think\Service
     protected function registerProviders(): void
     {
         $this->app->bind('request', Request::class);
+        $this->app->bind('littlerApp', App::class);
     }
 
     /**
@@ -173,6 +175,19 @@ class Service extends \think\Service
             public function get()
             {
                 return $this->path;
+            }
+        });
+    }
+
+    /**
+     * 注册模块服务
+     */
+    protected function registerEnabledModules()
+    {
+        $this->app->instance('enabledModules', new class() {
+            public function get()
+            {
+                return App::getEnabledModules();
             }
         });
     }

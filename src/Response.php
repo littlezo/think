@@ -63,9 +63,9 @@ class Response
         return json([
             'code' => Code::SUCCESS,
             'message' => 'success',
-            'count' => $list->total(),
-            'current' => $list->currentPage(),
-            'limit' => $list->listRows(),
+            'total' => $list->total(),
+            'page' => $list->currentPage(),
+            'size' => $list->listRows(),
             'data' => $list->getCollection(),
         ]);
     }

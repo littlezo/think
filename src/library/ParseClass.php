@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace littler\library;
 
 use littler\facade\FileSystem;
+use ReflectionMethod;
 use think\exception\ClassNotFoundException;
 use think\helper\Str;
 
@@ -99,33 +100,113 @@ class ParseClass
      * @throws \ReflectionException
      * @return \ReflectionClass
      */
-    public function getClassMethod($layer = 'controller')
+    public function getRoutes($layer = 'controller')
     {
-        $class_file = FileSystem::allFiles($this->path . DIRECTORY_SEPARATOR . $layer . DIRECTORY_SEPARATOR);
+        $class_file = FileSystem::allFiles($this->path . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $layer) . DIRECTORY_SEPARATOR);
         $class_list = [];
         foreach ($class_file as $item) {
             if ($item->getExtension() === 'php') {
-                $filename = str_replace('.php', '', str_replace(__DIR__, '', $item->getFilename()));
-                $class = $this->namespace . $this->module . '\\controller\\' . ucfirst($filename);
-                // [$controller, $action] = explode(Str::contains($rule, '@') ? '@' : '/', $rule);
-                // $docComment = (new \ReflectionClass($controller))->getMethod($action)->getDocComment();
-                // return strpos($docComment, config('little.permissions.method_auth_mark')) !== false;
+                $class_name = str_replace('.php', '', str_replace(__DIR__, '', $item->getFilename()));
+                $class = $this->namespace . $this->module . '\\' . str_replace(['/', '\\'], '\\', $layer) . '\\' . ucfirst($class_name);
                 if (class_exists($class)) {
-                    $this->controller = Str::snake($filename);
+                    $this->controller = Str::snake($class_name);
                     $methods = [];
                     $reflectionClass = new \ReflectionClass($class);
-                    foreach ($reflectionClass->getMethods() as $method) {
+                    //通过反射获取类的注释
+                    $doc = $reflectionClass->getDocComment();
+                    //解析类的注释头
+                    $ParseDoc = new ParseDoc();
+                    $paras_result = $ParseDoc->parse($doc);
+                    $class_docs = [
+                        'title' => $paras_result['title'] ?? '',
+                        'group' => $paras_result['group'] ?? '',
+                        'resource' => $paras_result['resource'] ?? '',
+                        'version' => $paras_result['version'] ?? '',
+                    ];
+                    // dd($class_docs);
+                    $method_docs = [];
+                    foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                        //输出测试
                         if (! $this->isMagicMethod($method->getName()) && $method->isPublic() && $method->getName() !== 'initialize' && $method->getName() !== 'validate') {
+                            $method_doc = $method->getDocComment();
+                            //解析注释
+                            $info = $ParseDoc->parse($method_doc);
+                            $route = [
+                                'title' => $info['title'] ?? '',
+                                'group' => $info['group'] ?? '',
+                                'resource' => $info['resource'] ?? '',
+                                'version' => $info['version'] ?? '',
+                                'param' => $info['param'] ?? [],
+                                'route' => $info['route'] ?? '',
+                            ];
+                            $method_docs[] = $route;
+                            //获取方法的参数
+                            $params = $method->getParameters();
+                            foreach ($params as $param) {
+                                //参数是否设置了默认参数，如果设置了，则获取其默认值
+                                $arguments[$param->getName()] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+                            }
                             $methods[] = Str::snake($method->getName());
                         }
                     }
-                    $class_list = array_merge(
-                        $class_list,
-                        [$this->namespace . $this->module . '\\' . $this->controller => [
-                            'class' => $class,
-                            'methods' => $methods,
-                        ]]
-                    );
+                    // dd($method_docs);
+                    $class_docs['method'] = $method_docs;
+                    $class_docs['class'] = $class_name;
+                    $class_docs['namespace'] = $reflectionClass->getNamespaceName();
+                    $class_list[] = $class_docs;
+                }
+            }
+            // dd($class_list);
+        }
+        return $class_list;
+    }
+
+    /**
+     * 获取所有class.
+     *
+     * @param string $layer 层名 controller model ...
+     * @throws \ReflectionException
+     * @return \ReflectionClass
+     */
+    public function getClassMethod($layer = 'controller')
+    {
+        $class_file = FileSystem::allFiles($this->path . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $layer) . DIRECTORY_SEPARATOR);
+        $class_list = [];
+        foreach ($class_file as $item) {
+            if ($item->getExtension() === 'php') {
+                $class_name = str_replace('.php', '', str_replace(__DIR__, '', $item->getFilename()));
+                $class = $this->namespace . $this->module . '\\' . str_replace(['/', '\\'], '\\', $layer) . '\\' . ucfirst($class_name);
+                if (class_exists($class)) {
+                    $this->controller = Str::snake($class_name);
+                    $methods = [];
+                    $reflectionClass = new \ReflectionClass($class);
+                    //通过反射获取类的注释
+                    $doc = $reflectionClass->getDocComment();
+                    //解析类的注释头
+                    $ParseDoc = new ParseDoc();
+                    $paras_result = $ParseDoc->parse($doc);
+                    $class_docs = $paras_result;
+                    $method_docs = [];
+                    foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                        //输出测试
+                        if (! $this->isMagicMethod($method->getName()) && $method->isPublic() && $method->getName() !== 'initialize' && $method->getName() !== 'validate') {
+                            $method_doc = $method->getDocComment();
+                            //解析注释
+                            $info = $ParseDoc->parse($method_doc);
+                            $method_docs += [$method->getName() => $info];
+                            //获取方法的参数
+                            $params = $method->getParameters();
+                            foreach ($params as $param) {
+                                //参数是否设置了默认参数，如果设置了，则获取其默认值
+                                $arguments[$param->getName()] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+                            }
+                            $methods[] = Str::snake($method->getName());
+                        }
+                    }
+                    $class_docs['method'] = $method_docs;
+                    $class_docs['class'] = $class_name;
+                    $class_docs['namespace'] = $reflectionClass->getNamespaceName();
+                    $class_list[] = $class_docs;
                 }
             }
         }
@@ -141,7 +222,6 @@ class ParseClass
      */
     public function getClass($layer = 'controller')
     {
-        // $class = $this->parse(ucfirst($this->controller));
         $class = $this->namespace . $this->module . '\\' . $layer . '\\' . ucfirst($this->controller);
 
         if (class_exists($class)) {
@@ -163,6 +243,7 @@ class ParseClass
         foreach ($psr4 as $key => $_namespace) {
             if ($_namespace == $namespace) {
                 $this->namespace = $key;
+                // dd($key);
                 break;
             }
         }
@@ -170,10 +251,13 @@ class ParseClass
             foreach ($packagesPsr4 as $key => $_namespace) {
                 if ($namespace == $key) {
                     $this->namespace = $key;
+                    dd($key);
+
                     break;
                 }
             }
         }
+
         return $this;
     }
 
