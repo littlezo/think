@@ -32,7 +32,12 @@ class LoadModuleRoutes
         $class = new ParseClass();
         foreach ($app->loadModule->get() as $namespace => $path) {
             [$namespace, $module] = explode('\\', $namespace);
-            $route = (array) $class->setNamespace($namespace)->setPath($path)->setModule($module)->getRoutes('admin\controller');
+            // dd($module);
+            $route = (array) $class->setNamespace($namespace)
+            ->setPath($path)
+            ->setModule($module)
+            ->getRoutes('admin\controller');
+            dd($route);
             $routes = array_merge($routes, $route);
         }
         // dd($routes);
