@@ -40,25 +40,25 @@ class ControllerGeneratorCommand extends Command
             $output->error(sprintf('you must use [ composer require --dev %s]', self::RELY_PACKAGE));
             exit(0);
         }
-        $module = $output->ask($input, '请输入模块') ?? 'member';
+        $module = $output->ask($input, '请输入模块');
         if (! $module) {
             $output->error('请输入模块名');
             exit(0);
         }
         $module = strtolower($module);
         $layer = strtolower($output->ask($input, '请输入控制器层级 默认admin') ?? 'admin');
-        $controller = $output->ask($input, '请输入控制器名') ?? 'member';
+        $controller = $output->ask($input, '请输入控制器名');
         if (! $controller) {
             $output->error('请输入控制器名');
             exit(0);
         }
         $controller = ucfirst($controller);
-        $model = $output->ask($input, '请输入模型名') ?? 'member';
-        if (! $controller) {
-            $output->error('请输入模型名');
-            exit(0);
+        $model = $output->ask($input, '请输入模型名') ?? '';
+        if ($model) {
+            // $output->error('请输入模型名');
+            // exit(0);
+            $model = ucfirst($model);
         }
-        $model = ucfirst($model);
         $notRoute = true;
         $asn = $output->ask($input, '是否创建路由(Y/M) 默认N') ?? 'N';
         if (strtolower($asn) == 'n') {

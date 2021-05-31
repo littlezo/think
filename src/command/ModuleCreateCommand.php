@@ -52,8 +52,9 @@ class ModuleCreateCommand extends Command
                     }
                 }
             }
-            $param['description'] = $output->ask($input, '请输入模块描述');
-            $param['description'] = $this->description ?: '';
+            $param['description'] = $output->ask($input, '请输入模块描述') ?? $param['name'];
+            // $param['description'] = $this->description ?: '';
+            // dd($param);
             (new Module())->done($param);
         } catch (\Exception $exception) {
             $output->error($exception->getTraceAsString());
