@@ -61,6 +61,7 @@ class Response
      */
     public static function paginate($list)
     {
+        // dd($list);
         if ($list instanceof Paginator) {
             return json([
                 'code' => Code::SUCCESS,
