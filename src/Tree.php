@@ -30,7 +30,6 @@ class Tree
                 $tree[] = $item;
             }
         }
-
         return $tree;
     }
 }

@@ -56,18 +56,24 @@ class Response
     /**
      * 分页.
      *
+     * @param mixed $list
      * @return
      */
-    public static function paginate(Paginator $list)
+    public static function paginate($list)
     {
-        return json([
-            'code' => Code::SUCCESS,
-            'message' => 'success',
-            'total' => $list->total(),
-            'page' => $list->currentPage(),
-            'size' => $list->listRows(),
-            'data' => $list->getCollection(),
-        ]);
+        if ($list instanceof Paginator) {
+            return json([
+                'code' => Code::SUCCESS,
+                'message' => 'success',
+                'total' => $list->total(),
+                'page' => $list->currentPage(),
+                'size' => $list->listRows(),
+                'data' => $list->getCollection(),
+            ]);
+        }
+        $list['code'] = Code::SUCCESS;
+        $list['message'] = 'success';
+        return json($list);
     }
 
     /**

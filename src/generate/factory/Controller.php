@@ -99,10 +99,8 @@ class Controller extends Factory
                     }
 
                     $class->addProperty(
-                        // lcfirst($model)
                         (new Property('model'))->protected()
                     );
-                    // dd($class);
                 }
             )
             ->getContent();
@@ -119,8 +117,6 @@ class Controller extends Factory
         if (! $params['controller']) {
             throw new FailedException('params has lost～');
         }
-
-        // parse controller
         [$className, $namespace] = $this->parseFilename($params['controller']);
 
         [$repository, $repositoryNamespace] = $this->parseFilename($params['controller_repository']);
@@ -131,22 +127,13 @@ class Controller extends Factory
 
         $use = new Uses();
         $class = new Classes($className);
-        // $_namespace = App::g
-        // dd();
         $_namespace = explode('\\', $namespace);
-        // dd($class);
         $_group = $_namespace[2] ?? '' . '/' . $_namespace[1] ?? '';
-        $_resource = Str::snake($className);
+        $_resource = str_replace('_', '/', Str::snake($className));
         $table = Utils::tableWithPrefix($params['table']);
         $database = config('database.connections.mysql.database');
-        // dd($database);
-        // AND table_name LIKE ':table'
         $sql = sprintf("Select table_name %s ,TABLE_COMMENT from INFORMATION_SCHEMA.TABLES Where table_schema = '%s' AND table_name LIKE '%s'", $table, $database, $table);
-        // dd($sql);
         $table_comment = Db::query($sql);
-        // Db::name();
-        //
-        // dd($table_comment);
         $title = $table_comment[0]['TABLE_COMMENT'] ?? $className;
         $date = date('Y年m月d日 H:i');
         return (new Build())->namespace($namespace)
@@ -171,7 +158,6 @@ class Controller extends Factory
                             TEXT
                     ),
                 function () {
-                    // dd($class);
                 }
             )
             ->getContent();
