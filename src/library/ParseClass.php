@@ -214,7 +214,8 @@ class ParseClass
             if ($layer && is_bool(stripos($class, $layer))) {
                 continue;
             }
-            if ($this->module && is_bool(stripos($class, $this->module))) {
+            $class_module = substr($class, 0, strrpos($class, 'controller'));
+            if ($this->module && is_bool(stripos($class_module, $this->module))) {
                 continue;
             }
             if (class_exists($class)) {
@@ -228,6 +229,7 @@ class ParseClass
                 if (! $paras_result || ! $paras_result['group'] ?? false || ! $paras_result['resource'] ?? false) {
                     continue;
                 }
+
                 $class_docs = [
                     'title' => $paras_result['title'] ?? '',
                     'group' => $paras_result['group'] ?? '',
