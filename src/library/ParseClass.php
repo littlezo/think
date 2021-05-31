@@ -18,6 +18,7 @@ namespace littler\library;
 use littler\facade\FileSystem;
 use ReflectionMethod;
 use think\exception\ClassNotFoundException;
+use think\facade\Cache;
 use think\helper\Str;
 
 class ParseClass
@@ -67,6 +68,10 @@ class ParseClass
      */
     public function getAllClass($layer = 'controller')
     {
+        $class_list = Cache::get('class_list_' . $layer);
+        if ($class_list) {
+            return $class_list;
+        }
         $class_file = FileSystem::allFiles(root_path());
         $class_list = [];
         foreach ($class_file as $item) {
@@ -97,14 +102,8 @@ class ParseClass
             if (stripos($relative_path, 'laravel')) {
                 continue;
             }
-            // dd($namespace);
             $class_name = str_replace('.php', '', $file_name);
             $class = $module_namespace . '\\' . $class_name;
-            // $class_list[] = [
-            //     'class' => $class,
-            //     'path' => $relative_path . DIRECTORY_SEPARATOR . $file_name,
-            // ];
-
             try {
                 if (class_exists($class)) {
                     $class_list[] = [
@@ -116,22 +115,26 @@ class ParseClass
                 continue;
             }
         }
+        Cache::tag('class_list')->set('class_list_' . $layer, $class_list);
         return $class_list;
     }
 
     /**
-     * 获取所有class.
+     * 获取所有路由.
      *
-     * @param string $layer 层名 controller model ...
+     * @param string $layer 层名 admin api shop ...
      * @throws \ReflectionException
      * @return \ReflectionClass
      */
     public function getRoutes($layer = null)
     {
+        $route_list = Cache::get('route_list_' . $layer ?? 'all');
+        if ($route_list) {
+            return $route_list;
+        }
         $class_list = $this->getAllClass();
         $route_list = [];
         foreach ($class_list as $item) {
-            // dd(is_bool(0));
             $class = $item['class'];
             if ($layer && is_bool(stripos($class, $layer))) {
                 continue;
@@ -139,7 +142,6 @@ class ParseClass
             if (class_exists($class)) {
                 $methods = [];
                 $reflectionClass = new \ReflectionClass($class);
-                // dd($reflectionClass);
                 //通过反射获取类的注释
                 $doc = $reflectionClass->getDocComment();
                 //解析类的注释头
@@ -148,7 +150,6 @@ class ParseClass
                 if (! $paras_result || ! $paras_result['group'] ?? false || ! $paras_result['resource'] ?? false) {
                     continue;
                 }
-                // dd($paras_result);
                 $class_docs = [
                     'title' => $paras_result['title'] ?? '',
                     'group' => $paras_result['group'] ?? '',
@@ -188,6 +189,85 @@ class ParseClass
                 $route_list[] = $class_docs;
             }
         }
+        Cache::tag('routes_list')->set('route_list_' . $layer ?? 'all', $route_list);
+        return $route_list;
+    }
+
+    /**
+     * 获取模块路由.
+     *
+     * @param string $module 模块 user goods ...
+     * @param string $layer 层名 admin api ...
+     * @throws \ReflectionException
+     * @return \ReflectionClass
+     */
+    public function getModuleRoutes($layer = null)
+    {
+        $route_list = Cache::get('route_module_list_' . $this->module);
+        if ($route_list) {
+            return $route_list;
+        }
+        $class_list = $this->getAllClass();
+        $route_list = [];
+        foreach ($class_list as $item) {
+            $class = $item['class'];
+            if ($layer && is_bool(stripos($class, $layer))) {
+                continue;
+            }
+            if ($this->module && is_bool(stripos($class, $this->module))) {
+                continue;
+            }
+            if (class_exists($class)) {
+                $methods = [];
+                $reflectionClass = new \ReflectionClass($class);
+                //通过反射获取类的注释
+                $doc = $reflectionClass->getDocComment();
+                //解析类的注释头
+                $ParseDoc = new ParseDoc();
+                $paras_result = $ParseDoc->parse($doc);
+                if (! $paras_result || ! $paras_result['group'] ?? false || ! $paras_result['resource'] ?? false) {
+                    continue;
+                }
+                $class_docs = [
+                    'title' => $paras_result['title'] ?? '',
+                    'group' => $paras_result['group'] ?? '',
+                    'resource' => str_replace('_', '/', $paras_result['resource']) ?? '',
+                    'version' => $paras_result['version'] ?? '',
+                ];
+                $method_docs = [];
+                foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                    //输出测试
+                    if (! $this->isMagicMethod($method->getName()) && $method->isPublic() && $method->getName() !== 'initialize' && $method->getName() !== 'validate') {
+                        $method_doc = $method->getDocComment();
+                        //解析注释
+                        $info = $ParseDoc->parse($method_doc);
+                        $route = [
+                            'title' => $info['title'] ?? '',
+                            'group' => $class_docs['group'] ?? '',
+                            'resource' => $class_docs['resource'] ?? '',
+                            'version' => $info['version'] ?? '',
+                            'param' => $info['param'] ?? [],
+                            'route' => $info['route'] ?? '',
+                        ];
+                        if (! $route['route']) {
+                            continue;
+                        }
+                        $method_docs[] = $route;
+                        //获取方法的参数
+                        $params = $method->getParameters();
+                        foreach ($params as $param) {
+                            //参数是否设置了默认参数，如果设置了，则获取其默认值
+                            $arguments[$param->getName()] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+                        }
+                        $methods[] = Str::snake($method->getName());
+                    }
+                }
+                $class_docs['method'] = $method_docs;
+                $class_docs['class'] = $class;
+                $route_list[] = $class_docs;
+            }
+        }
+        Cache::tag('routes_list')->set('route_module_list_' . $this->module, $route_list);
         return $route_list;
     }
 
@@ -336,7 +416,6 @@ class ParseClass
         foreach ($psr4 as $key => $_namespace) {
             if ($_namespace == $namespace) {
                 $this->namespace = $key;
-                // dd($key);
                 break;
             }
         }
@@ -344,8 +423,6 @@ class ParseClass
             foreach ($packagesPsr4 as $key => $_namespace) {
                 if ($namespace == $key) {
                     $this->namespace = $key;
-                    dd($key);
-
                     break;
                 }
             }
