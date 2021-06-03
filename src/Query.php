@@ -137,8 +137,9 @@ class Query extends \think\db\Query
 
         foreach ($requestParams as $field => $value) {
             // 排除不存在字段
-            if (! in_array(str_replace(['start_,end_,like_,%like_,like%_,max_,min_,size,page'], '', $field), $this->model->field, )) {
-                continue;
+            // echo str_replace(['start_,end_,like_,max_,min_,size,page,left_like_,right_like_,'], '', $field) . PHP_EOL;
+            if (! in_array(str_replace(['start_,end_,like_,left_like_,right_like_,max_,min_,size,page'], '', $field), $this->model->field, )) {
+                // continue;
             }
             if (isset($params[$field])) {
                 // ['>', value] || value
@@ -148,24 +149,33 @@ class Query extends \think\db\Query
                     $this->where($field, $value);
                 }
             } else {
+                // dd($this->model->field);
                 [$condition] = explode('_', $field);
                 // $startPos = strpos($field, 'start_');
                 // $endPos = strpos($field, 'end_');
                 // 时间区间范围 start_数据库字段 & end_数据库字段
-
-                if ($condition === 0) {
-                    $this->where(str_replace('start_', '', $field), '>=', strtotime($value));
-                } elseif ($condition === 0) {
-                    $this->where(str_replace('end_', '', $field), '<=', strtotime($value));
+                // echo $condition . PHP_EOL;
+                if ($condition === 'start') {
+                    if (is_timestamp($value)) {
+                        $this->where(str_replace('start_', '', $field), '>=', (int) $value);
+                    } else {
+                        $this->where(str_replace('start_', '', $field), '>=', strtotime($value));
+                    }
+                } elseif ($condition === 'end') {
+                    if (is_timestamp($value)) {
+                        $this->where(str_replace('end_', '', $field), '>=', (int) $value);
+                    } else {
+                        $this->where(str_replace('end_', '', $field), '>=', strtotime($value));
+                    }
                 // 模糊搜索
                 } elseif ($condition === 'like') {
                     $this->whereLike(str_replace('like_', '', $field), $value);
                 // 左模糊搜索
-                } elseif ($condition === '%like') {
-                    $this->whereLeftLike(str_replace('%like_', '', $field), $value);
+                } elseif ($condition === 'left') {
+                    $this->whereLeftLike(str_replace('left_like_', '', $field), $value);
                 // 右模糊搜索
-                } elseif ($condition === 'like%') {
-                    $this->whereRightLike(str_replace('like%_', '', $field), $value);
+                } elseif ($condition === 'right') {
+                    $this->whereRightLike(str_replace('right_like_', '', $field), $value);
                 // 区间范围查询
                 } elseif ($condition === 'max') {
                     $this->where(str_replace('max_', '', $field), '<=', $value);

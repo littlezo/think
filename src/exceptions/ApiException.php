@@ -20,7 +20,7 @@ use think\exception\HttpException;
 
 abstract class ApiException extends HttpException
 {
-    protected const HTTP_SUCCESS = 200;
+    protected const HTTP_SUCCESS = 500;
 
     public function __construct(string $message = '', int $code = 0, Exception $previous = null, array $headers = [], $statusCode = 0)
     {

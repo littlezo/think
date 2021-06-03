@@ -1094,3 +1094,48 @@ function timeDiff($begin_times = null, $end_times = null, $format = false, $type
     }
     return $diff_str;
 }
+/**
+ * hex 函数操作.
+ * @param mixed $hexStr
+ * @param mixed $is_hex
+ */
+function hexScreen($hexStr, $is_hex = true)
+{
+    $str = '';
+    $hexStrArr = [];
+    for ($i = 0, $j = 1; $i < strlen($hexStr); $i = $i + 2, $j++) {
+        $hexStrArr[] = $hexStr[$i] . $hexStr[$i + 1];
+    }
+    return $is_hex == true ? implode(' ', $hexStrArr) : implode('', $hexStrArr);
+}
+
+function hexToStr($hex)
+{
+    $str = '';
+    for ($i = 0; $i < strlen($hex) - 1; $i += 2) {
+        $str .= chr(hexdec($hex[$i] . $hex[$i + 1]));
+    }
+    return $str;
+}
+
+function strToHex($str)
+{
+    $hex = '';
+    for ($i = 0; $i < strlen($str); ++$i) {
+        $hex .= dechex(ord($str[$i]));
+    }
+    return $hex;
+}
+
+function isHexString($str)
+{
+    return ctype_xdigit($str);
+}
+
+function is_timestamp($timestamp)
+{
+    if (strtotime(date('Y-m-d H:i:s', (int) $timestamp)) === (int) $timestamp) {
+        return (int) $timestamp;
+    }
+    return false;
+}

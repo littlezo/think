@@ -198,5 +198,6 @@ class Service extends \think\Service
                 return App::getEnabledModules();
             }
         });
+        // dd($this->app);
     }
 }

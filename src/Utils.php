@@ -180,7 +180,7 @@ class Utils
      */
     public static function isSuperApp()
     {
-        return request()->user()->id == config('little.permissions.super_admin_id');
+        // return request()->user()->id == config('little.permissions.super_admin_id');
     }
 
     /**
@@ -191,7 +191,7 @@ class Utils
      */
     public static function config($key)
     {
-        return Config::where('key', $key)->value('value');
+        // return Config::where('key', $key)->value('value');
     }
 
     /**
