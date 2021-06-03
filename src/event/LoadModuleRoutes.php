@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace littler\event;
 
 use littler\library\ParseClass;
+use littler\middleware\DocsMiddleware;
 use think\App;
 
 class LoadModuleRoutes
@@ -91,7 +92,7 @@ class LoadModuleRoutes
                 }
             }
         }
-
+        $router->rule('/docs', '')->middleware(DocsMiddleware::class);
         // dd($router);
 
         // $paths = app(App::class)->make('moduleRoute')->get();
