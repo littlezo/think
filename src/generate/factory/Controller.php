@@ -76,9 +76,11 @@ class Controller extends Factory
             throw new FailedException('params has lost～');
         }
         [$className, $namespace] = $this->parseFilename($params['controller_repository']);
-
-        [$model, $modelNamespace] = $this->parseFilename($params['model']);
-        $asModel = ucfirst(Str::contains($model, 'Model') ? $model : $model . 'Model');
+        $is_use_model = $params['model'];
+        if ($is_use_model) {
+            [$model, $modelNamespace] = $this->parseFilename($params['model']);
+            $asModel = ucfirst(Str::contains($model, 'Model') ? $model : $model . 'Model');
+        }
 
         if (! $className) {
             throw new FailedException('未填写控制器名称');

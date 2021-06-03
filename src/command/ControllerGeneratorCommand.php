@@ -17,7 +17,6 @@ namespace littler\command;
 
 use littler\App;
 use littler\generate\factory\Controller;
-use littler\generate\factory\Route;
 use littler\library\Composer;
 use think\console\Command;
 use think\console\Input;
@@ -59,31 +58,21 @@ class ControllerGeneratorCommand extends Command
             // exit(0);
             $model = ucfirst($model);
         }
-        $notRoute = true;
-        $asn = $output->ask($input, '是否创建路由(Y/M) 默认N') ?? 'N';
-        if (strtolower($asn) == 'n') {
-            $notRoute = false;
-        }
         $params = [
             'controller' => 'little\\' . $module . '\\' . $layer . '\\controller\\' . $controller,
             'controller_repository' => 'little\\' . $module . '\\repository\\' . $layer . '\\' . $controller . 'Traits',
             'model' => 'little\\' . $module . '\\model\\' . $model,
             'extra' => [
-                'not_route' => $notRoute,
             ],
         ];
         if (! class_exists($params['model'])) {
-            $output->info(sprintf('模型类 %s 不存在！', $params['model']));
-            // exit(0);
+            $output->error(sprintf('模型 %s 不存在！', $params['model'] . '::class'));
+            exit(0);
         }
-        $controllerFile = App::getModuleDirectory($module, 'admin') . 'controller' . DIRECTORY_SEPARATOR . $model . '.php';
+        $controllerFile = App::getModuleDirectory($module, $layer) . 'controller' . DIRECTORY_SEPARATOR . $model . '.php';
         $repositoryFile = App::getModuleDirectory($module, 'repository') . $layer . DIRECTORY_SEPARATOR . $controller . 'Traits' . '.php';
 
         (new Controller())->done($params);
-        (new Route())->controller($params['controller'])
-            ->restful(true)
-            ->layer($layer)
-            ->done($params);
         if (file_exists($controllerFile)) {
             $output->info(sprintf('Controller %s Create Successfully!', $controllerFile));
         } else {

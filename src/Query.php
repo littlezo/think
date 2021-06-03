@@ -38,7 +38,7 @@ class Query extends \think\db\Query
         $this->options['field'] = array_merge($this->options['field'] ?? [], array_map(function ($value) use ($table, $tableAlias) {
             return ($tableAlias ?: $table) . '.' . $value;
         }, $field));
-
+        // dd($tableAlias ? sprintf('%s %s', $table, $tableAlias) : $table, sprintf('%s.%s=%s.%s', $tableAlias ? $tableAlias : $table, $joinField, $this->getAlias(), $currentJoinField), $type, $bind);
         return $this->join($tableAlias ? sprintf('%s %s', $table, $tableAlias) : $table, sprintf('%s.%s=%s.%s', $tableAlias ? $tableAlias : $table, $joinField, $this->getAlias(), $currentJoinField), $type, $bind);
     }
 
@@ -136,7 +136,10 @@ class Query extends \think\db\Query
         }
 
         foreach ($requestParams as $field => $value) {
-            // dd($value);
+            // 排除不存在字段
+            if (! in_array(str_replace(['start_,end_,like_,%like_,like%_,max_,min_,size,page'], '', $field), $this->model->field, )) {
+                continue;
+            }
             if (isset($params[$field])) {
                 // ['>', value] || value
                 if (is_array($params[$field])) {
@@ -174,6 +177,7 @@ class Query extends \think\db\Query
                 }
             }
         }
+        // dd($this);
         return $this;
     }
 

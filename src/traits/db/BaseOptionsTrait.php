@@ -75,16 +75,15 @@ trait BaseOptionsTrait
         return $model->{$this->getAutoPk()};
     }
 
-    /*33
-     *
+    /**
      * @time 2019年12月03日
      * @param $id
      * @param $data
      * @param string $field
-     * @return bool
      */
     public function updateBy($id, $data, $field = ''): bool
     {
+        // dd($this->filterData($data));
         if (static::update($this->filterData($data), [$field ?: $this->getAutoPk() => $id], $this->field)) {
             $this->updateChildren($id, $data);
 
@@ -291,7 +290,7 @@ trait BaseOptionsTrait
     protected function updateChildren($parentId, $data)
     {
         if (property_exists($this, 'updateChildrenFields')) {
-            $parentIdField = property_exists($this, 'parentId') ? $this->{$parentId} : 'parent';
+            $parentIdField = property_exists($this, 'parent') ? $this->{$parentId} : 'parent';
 
             if (! empty($this->updateChildrenFields)) {
                 if (is_array($this->updateChildrenFields)) {
@@ -325,7 +324,10 @@ trait BaseOptionsTrait
             if (is_null($value)) {
                 unset($data[$field]);
             }
-
+            // dd(property_exists($this, $field));
+            if (! in_array($field, $this->field)) {
+                // unset($data[$field]);
+            }
             if ($field == $this->getAutoPk()) {
                 unset($data[$field]);
             }

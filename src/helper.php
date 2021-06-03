@@ -13,7 +13,6 @@ declare(strict_types=1);
  * @license  https://github.com/littlezo/MozillaPublicLicense/blob/main/LICENSE
  *
  */
-use littler\QRCode;
 use think\Exception;
 use think\facade\Event;
 
@@ -311,6 +310,26 @@ function random_keys($length)
 }
 
 /**
+ * 获取日期订单号.
+ * @param int $length
+ * @param mixed $prefix
+ * @param mixed $random_length
+ * @return string
+ */
+function time_trade_no($prefix = null, $random_length = 4)
+{
+    $pattern = '1234567890';
+    $key = date('YmdHis');
+    for ($i = 0; $i < $random_length; ++$i) {
+        $key .= $pattern[
+            mt_rand(0, 9)];    //生成php随机数
+    }
+    if ($prefix) {
+        $key = $prefix . $key;
+    }
+    return $key;
+}
+/**
  * 发送HTTP请求方法，目前只支持CURL发送请求
  * @param $url
  * @param int $timeout
@@ -371,27 +390,6 @@ function replace_array_element($array, $replace)
         }
     }
     return $array;
-}
-
-/**
- * 过滤特殊符号.
- * @param $string
- * @return null|array|string|string[]
- */
-function iHtmlspecialchars($string)
-{
-    if (is_array($string)) {
-        foreach ($string as $key => $val) {
-            $string[$key] = iHtmlspecialchars($val);
-        }
-    } else {
-        $string = preg_replace(
-            '/&amp;((#(d{3,5}|x[a-fa-f0-9]{4})|[a-za-z][a-z0-9]{2,5});)/',
-            '&\1',
-            str_replace(['&', '"', '<', '>'], ['&amp;', '&quot;', '&lt;', '&gt;'], $string)
-        );
-    }
-    return $string;
 }
 
 /*系统函数*/
@@ -473,91 +471,6 @@ function namespaceExists($namespace)
 function table($table = '')
 {
     return config('database.connections.prefix') . $table;
-}
-
-/**
- * 获取图片的真实路径.
- * @param string $path 图片初始路径
- * @param string $type 类型 big、mid、small
- * @return string 图片的真实路径
- */
-function img($path, $type = '')
-{
-    $start = strripos($path, '.');
-    $type = $type ? '_' . $type : '';
-    $first = explode('/', $path);
-    $path = substr_replace($path, $type, $start, 0);
-    if (stristr($path, 'http://') === false && stristr($path, 'https://') === false) {
-        if (is_numeric($first[0])) {
-            $true_path = __ROOT__ . '/upload/' . $path;
-        } else {
-            $true_path = __ROOT__ . '/' . $path;
-        }
-    } else {
-        $true_path = $path;
-    }
-    return $true_path;
-}
-
-/**
- * 获取标准二维码格式.
- * @param $url
- * @param $path
- * @param $qr_code_name
- * @return string
- */
-function qrCode($url, $path, $qr_code_name)
-{
-    if (! is_dir($path)) {
-        $mode = intval('0777', 8);
-        mkdir($path, $mode, true);
-        chmod($path, $mode);
-    }
-    $path = $path . '/' . $qr_code_name . '.png';
-    if (file_exists($path)) {
-        unlink($path);
-    }
-    QRCode::png($url, $path, '', 4, 1);
-    return $path;
-}
-
-/**
- * 前端页面api请求(通过api接口实现).
- * @param string $method
- * @param array $params
- * @return mixed
- */
-function api($method, $params = [])
-{
-    //本地访问
-    return get_api_data($method, $params);
-}
-
-/**
- * 获取Api类.
- * @param $method
- * @param $params
- * @return array
- */
-function get_api_data($method, $params)
-{
-    $method_array = explode('.', $method);
-    if ($method_array[0] == 'System') {
-        $class_name = 'app\\api\\controller\\' . $method_array[1];
-        if (! class_exists($class_name)) {
-            return error();
-        }
-        $api_model = new $class_name($params);
-    } else {
-        $class_name = "addon\\{$method_array[0]}\\api\\controller\\" . $method_array[1];
-
-        if (! class_exists($class_name)) {
-            return error();
-        }
-        $api_model = new $class_name($params);
-    }
-    $function = $method_array[2];
-    return $api_model->{$function}($params);
 }
 
 /**
@@ -645,97 +558,6 @@ function arr_del_arr($arr, $del_arr)
 }
 
 /**
- * 分割sql语句.
- * @param string $content sql内容
- * @param bool $string 如果为真，则只返回一条sql语句，默认以数组形式返回
- * @param array $replace 替换前缀，如：['my_' => 'me_']，表示将表前缀my_替换成me_
- * @return array|string 除去注释之后的sql语句数组或一条语句
- */
-function parse_sql($content = '', $string = false, $replace = [])
-{
-    // 纯sql内容
-    $pure_sql = [];
-    // 被替换的前缀
-    $from = '';
-    // 要替换的前缀
-    $to = '';
-    // 替换表前缀
-    if (! empty($replace)) {
-        $to = current($replace);
-        $from = current(array_flip($replace));
-    }
-    if ($content != '') {
-        // 多行注释标记
-        $comment = false;
-        // 按行分割，兼容多个平台
-        $content = str_replace(["\r\n", "\r"], "\n", $content);
-        $content = explode("\n", trim($content));
-        // 循环处理每一行
-        foreach ($content as $key => $line) {
-            // 跳过空行
-            if ($line == '') {
-                continue;
-            }
-            // 跳过以#或者--开头的单行注释
-            if (preg_match('/^(#|--)/', $line)) {
-                continue;
-            }
-            // 跳过以/**/包裹起来的单行注释
-            if (preg_match('/^\\/\\*(.*?)\\*\\//', $line)) {
-                continue;
-            }
-            // 多行注释开始
-            if (substr($line, 0, 2) == '/*') {
-                $comment = true;
-                continue;
-            }
-            // 多行注释结束
-            if (substr($line, -2) == '*/') {
-                $comment = false;
-                continue;
-            }
-            // 多行注释没有结束，继续跳过
-            if ($comment) {
-                continue;
-            }
-            // 替换表前缀
-            if ($from != '') {
-                $line = str_replace('`' . $from, '`' . $to, $line);
-            }
-            // sql语句
-            $pure_sql[] = $line;
-        }
-        // 只返回一条语句
-        if ($string) {
-            return implode('', $pure_sql);
-        }
-        // 以数组形式返回sql语句
-        $pure_sql = implode("\n", $pure_sql);
-        $pure_sql = explode(";\n", $pure_sql);
-    }
-    return $pure_sql;
-}
-
-/**
- * 执行sql.
- * @param $sql_name
- */
-function execute_sql($sql_name)
-{
-    $sql_string = file_get_contents($sql_name);
-    $sql_string = str_replace('{{prefix}}', config('database.connections.mysql.prefix'), $sql_string);
-    if ($sql_string) {
-        $sql = explode(";\n", str_replace("\r", "\n", $sql_string));
-        foreach ($sql as $value) {
-            $value = trim($value);
-            if (! empty($value)) {
-                \think\facade\Db::execute($value);
-            }
-        }
-    }
-}
-
-/**
  * 检测目录读写权限.
  * @param $dir
  * @return bool
@@ -744,7 +566,7 @@ function check_path_is_writable($dir)
 {
     $testDir = $dir;
     sp_dir_create($testDir);
-    if (is_file_write($testDir)) {
+    if (is_write($testDir)) {
         return true;
     }
     return false;
@@ -1167,31 +989,6 @@ function is_point_in_polygon($point, $pts)
 }
 
 /**
- * 获取文件地图.
- * @param $path
- * @param array $arr
- * @return array
- */
-function getFileMap($path, $arr = [])
-{
-    if (is_dir($path)) {
-        $dir = scandir($path);
-        foreach ($dir as $file_path) {
-            if ($file_path != '.' && $file_path != '..') {
-                $temp_path = $path . '/' . $file_path;
-                if (is_dir($temp_path)) {
-                    $arr[$temp_path] = $file_path;
-                    $arr = getFileMap($temp_path, $arr);
-                } else {
-                    $arr[$temp_path] = $file_path;
-                }
-            }
-        }
-        return $arr;
-    }
-}
-
-/**
  * 删除指定目录所有文件和目录.
  * @param $path
  */
@@ -1246,10 +1043,25 @@ function recurseCopy($src, $dst)
  * @param $end_time
  * @param mixed $begin_times
  * @param mixed $end_times
- * @return array
+ * @param mixed $format
+ * @param mixed $type
+ * @return int||array
  */
-function timeDiff($begin_times, $end_times)
+function timeDiff($begin_times = null, $end_times = null, $format = false, $type = '%H:%M:%S')
 {
+    if (! is_numeric($begin_times)) {
+        $begin_times = strtotime((string) $begin_times);
+    }
+    if (! $begin_times) {
+        $begin_times = time();
+    }
+    if (! is_numeric($end_times)) {
+        $end_times = strtotime((string) $end_times);
+    }
+    if (! $end_times) {
+        $end_times = time();
+    }
+
     if ($begin_times < $end_times) {
         $start_time = $begin_times;
         $end_time = $end_times;
@@ -1258,13 +1070,15 @@ function timeDiff($begin_times, $end_times)
         $end_time = $begin_times;
     }
     $timeDiff = $end_time - $start_time;
+    if (! $format) {
+        return $timeDiff;
+    }
     $days = intval($timeDiff / 86400);
     $remain = $timeDiff % 86400;
     $hours = intval($remain / 3600);
     $remain = $remain % 3600;
     $mins = intval($remain / 60);
     $secs = $remain % 60;
-
     $diff_str = '';
     if ($days > 0) {
         $diff_str .= $days . '天';
