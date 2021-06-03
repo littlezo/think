@@ -136,7 +136,7 @@ class ParseClass
         $route_list = [];
         foreach ($class_list as $item) {
             $class = $item['class'];
-            if ($layer && is_bool(stripos($class, $layer))) {
+            if ($layer !== 'all' && is_bool(stripos($class, $layer))) {
                 continue;
             }
             if (class_exists($class)) {
@@ -189,7 +189,7 @@ class ParseClass
                 $route_list[] = $class_docs;
             }
         }
-        Cache::tag('routes_list')->set('route_list_' . $layer ?? 'all', $route_list);
+        Cache::tag('routes_list')->set('route_list_' . $layer, $route_list);
         return $route_list;
     }
 
@@ -203,7 +203,7 @@ class ParseClass
      */
     public function getModuleRoutes($layer = null)
     {
-        $route_list = Cache::get('route_module_list_' . $this->module);
+        $route_list = Cache::get('route_module_list_' . $this->module . '_' . $layer);
         if ($route_list) {
             return $route_list;
         }
@@ -211,7 +211,7 @@ class ParseClass
         $route_list = [];
         foreach ($class_list as $item) {
             $class = $item['class'];
-            if ($layer && is_bool(stripos($class, $layer))) {
+            if ($layer !== 'all' && is_bool(stripos($class, $layer))) {
                 continue;
             }
             $class_module = substr($class, 0, strrpos($class, 'controller'));
@@ -242,6 +242,7 @@ class ParseClass
                     if (! $this->isMagicMethod($method->getName()) && $method->isPublic() && $method->getName() !== 'initialize' && $method->getName() !== 'validate') {
                         $method_doc = $method->getDocComment();
                         //解析注释
+                        $ParseDoc = new ParseDoc();
                         $info = $ParseDoc->parse($method_doc);
                         $route = [
                             'title' => $info['title'] ?? '',
@@ -269,7 +270,7 @@ class ParseClass
                 $route_list[] = $class_docs;
             }
         }
-        Cache::tag('routes_list')->set('route_module_list_' . $this->module, $route_list);
+        Cache::tag('routes_list')->set('route_module_list_' . $this->module . '_' . $layer, $route_list);
         return $route_list;
     }
 

@@ -27,7 +27,7 @@ class LoadModuleRoutes
     {
         $app = app();
         $class = new ParseClass();
-        $routes = $route = (array) $class->getRoutes();
+        $routes = $route = (array) $class->getRoutes('all');
         $router = $app->get('route');
         $domain = config('little.domain');
         $rest = ['index', 'create', 'edit', 'read', 'save', 'update', 'delete'];

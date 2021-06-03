@@ -355,7 +355,7 @@ class FileSystem
     public function allFiles(string $directory, $hidden = false): array
     {
         return iterator_to_array(
-            Finder::create()->files()->ignoreDotFiles(! $hidden)->in($directory)->sortByName(),
+            Finder::create()->files()->ignoreUnreadableDirs(true)->ignoreDotFiles(! $hidden)->in($directory)->sortByName(),
             false
         );
     }
