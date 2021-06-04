@@ -15,12 +15,11 @@ declare(strict_types=1);
  */
 namespace littler;
 
-use littler\exceptions\FailedException;
-use littler\exceptions\ValidateFailedException;
-
 // 应用请求对象类
 class Request extends \think\Request
 {
+    public $user;
+
     /**
      * @var bool
      */
@@ -40,7 +39,7 @@ class Request extends \think\Request
     public function __construct()
     {
         parent::__construct();
-        $this->validate();
+        $this->user = request()->user;
     }
 
     /**
@@ -63,39 +62,18 @@ class Request extends \think\Request
     }
 
     /**
-     * 初始化验证
+     * 重写 post.
      *
-     * @throws \Exception
-     * @return mixed
+     * @param string $name
+     * @param null $default
+     * @param string $filter
+     * @return null|array|mixed
      */
-    protected function validate()
+    public function post($name = '', $default = null, $filter = '')
     {
-        if (method_exists($this, 'rules')) {
-            try {
-                $validate = app('validate');
-                // 批量验证
-                if ($this->batch) {
-                    $validate->batch($this->batch);
-                }
-
-                // 验证
-                $message = [];
-                if (method_exists($this, 'message')) {
-                    $message = $this->message();
-                }
-                if (! $validate->message(empty($message) ? [] : $message)->check(request()->param(), $this->rules())) {
-                    throw new FailedException($validate->getError());
-                }
-            } catch (\Exception $e) {
-                throw new ValidateFailedException($e->getMessage());
-            }
+        if ($this->needCreatorId) {
         }
 
-        // 设置默认参数
-        // if ($this->needCreatorId) {
-        //     $this->param['creator_id'] = $this->user()->id;
-        // }
-
-        return true;
+        return parent::post($name, $default, $filter);
     }
 }

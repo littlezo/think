@@ -76,8 +76,10 @@ class Query extends \think\db\Query
         }
 
         // 过滤软删除字段
-        if ($this->model->hasField($this->model->getDeleteAtField())) {
-            $field[] = $this->model->getDeleteAtField();
+        if ($this->model->getDeleteAtField()) {
+            if ($this->model->hasField($this->model->getDeleteAtField())) {
+                $field[] = $this->model->getDeleteAtField();
+            }
         }
 
         // 字段排除
@@ -167,7 +169,7 @@ class Query extends \think\db\Query
                     } else {
                         $this->where(str_replace('end_', '', $field), '>=', strtotime($value));
                     }
-                // 模糊搜索
+                    // 模糊搜索
                 } elseif ($condition === 'like') {
                     $this->whereLike(str_replace('like_', '', $field), $value);
                 // 左模糊搜索

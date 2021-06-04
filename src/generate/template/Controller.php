@@ -27,7 +27,7 @@ class Controller
     public function uses()
     {
         return <<<'TMP'
-            use littler\BaseRequest;
+            use littler\Request;
             use littler\Response;
             use littler\BaseController;
             {USE}

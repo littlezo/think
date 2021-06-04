@@ -117,7 +117,7 @@ class Service extends \think\Service
      */
     protected function registerProviders(): void
     {
-        $this->app->bind('request', Request::class);
+        // $this->app->bind('request', Request::class);
         $this->app->bind('littlerApp', App::class);
     }
 

@@ -32,7 +32,7 @@ class Controller extends Factory
     protected $methods = [];
 
     protected $uses = [
-        'littler\BaseRequest as Request',
+        'littler\Request',
         'littler\Response',
         'littler\BaseController',
     ];
@@ -90,7 +90,7 @@ class Controller extends Factory
         $class = new Classes($className, 'trait');
         // dd($class);
         return (new Build())->namespace($namespace)
-            ->use($use->name('littler\BaseRequest', 'Request'))
+            ->use($use->name('littler\Request'))
             ->use($use->name('littler\Response'))
             ->use($use->name($modelNamespace . '\\' . ucfirst($model), $asModel))
             ->class(
@@ -141,7 +141,7 @@ class Controller extends Factory
         return (new Build())->namespace($namespace)
             ->use($use->name($params['controller_repository']))
             ->use($use->name('littler\BaseController', 'Controller'))
-            ->use($use->name('littler\BaseRequest', 'Request'))
+            ->use($use->name('littler\Request'))
             ->use($use->name('littler\Response'))
             ->class(
                 $class->extend('Controller')

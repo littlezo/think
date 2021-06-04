@@ -25,6 +25,7 @@ use think\exception\HttpResponseException;
 use think\exception\ValidateException;
 use think\Response;
 use Throwable;
+use xiaodi\JWTAuth\Exception\JWTException;
 
 class ExceptionHandle extends Handle
 {
@@ -58,7 +59,7 @@ class ExceptionHandle extends Handle
     public function render($request, Throwable $e): Response
     {
         // 其他错误交给系统处理
-        if ($e instanceof \Exception && ! $e instanceof ApiException) {
+        if ($e instanceof \Exception && ! $e instanceof ApiException && ! $e instanceof JWTException) {
             $e = new FailedException($e->getMessage(), 10005, $e);
         }
         return parent::render($request, $e);
