@@ -76,7 +76,7 @@ class Auth
         if (! $user) {
             throw new LoginFailedException();
         }
-        if ($user->status == $user::DISABLE) {
+        if ($user->status == $user::$disable) {
             throw new LoginFailedException('该用户已被禁用|' . $user->username ?? null, Code::USER_FORBIDDEN);
         }
         if ($this->checkPassword && ! password_verify($condition['password'] ?? 'no', $user->password)) {
@@ -94,8 +94,8 @@ class Auth
     public function user($token = null)
     {
         $user = $this->user[$this->guard] ?? null;
+        $token = $token ?? app()->get('jwt.token')->getToken();
         Jwt::verify($token);
-        $token = app()->get('jwt.token')->getToken();
         if (! $user) {
             switch ($this->getDriver()) {
                 case 'jwt':
@@ -175,7 +175,7 @@ class Auth
         unset($user->password);
         // dd($user->toArray());
         // Jwt::store($this->guard);
-        return Jwt::token($this->guard . '_' . $user->{$user->getAutoPk()}, $user->toArray())->toString();
+        return Jwt::token($user->{$user->getAutoPk()}, $user->toArray())->toString();
     }
 
     /**

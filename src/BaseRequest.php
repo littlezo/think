@@ -17,6 +17,13 @@ namespace littler;
 
 class BaseRequest extends Request
 {
+    public $user;
+
+    public function __construct()
+    {
+        $this->user = request()->user;
+    }
+
     /**
      * 重写 post.
      *

@@ -62,6 +62,7 @@ abstract class ModuleService extends Service
     {
         $model[] = $this->loadModuleRoute();
         if (method_exists($this, 'loadModuleRoute') && ! is_null($this->loadModuleRoute())) {
+            // dd($this->loadModuleRoute());
             $this->app->make('moduleRoute')->loadModuleRoute($this->loadModuleRoute());
         }
     }

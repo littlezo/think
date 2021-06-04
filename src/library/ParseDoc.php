@@ -80,6 +80,10 @@ class ParseDoc
             } elseif ($pos = strpos($line, 'apiRoute')) {
                 $param = substr($line, $pos, $pos + 4);
                 $value = str_replace(['(', ')', '"'], '', substr($line, $pos + 7));
+            } elseif ($pos = strpos($line, 'Auth')) {
+                $param = substr($line, $pos, $pos + 3);
+                $value = str_replace(['(', ')', '"'], '', substr($line, $pos + 6));
+            // dd($value);
             } elseif (strpos($line, ' ') > 0) {
                 $param = substr($line, 1, strpos($line, ' ') - 1);
                 $value = substr($line, strlen($param) + 2);
@@ -96,7 +100,6 @@ class ParseDoc
                 return false;
             }
         }
-        // dd($line);
         return $line;
     }
 

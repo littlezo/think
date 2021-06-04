@@ -155,6 +155,7 @@ class ParseClass
                     'group' => $paras_result['group'] ?? '',
                     'resource' => str_replace('_', '/', $paras_result['resource']) ?? '',
                     'version' => $paras_result['version'] ?? '',
+                    'auth' => $paras_result['auth'] ?? '',
                 ];
                 $method_docs = [];
                 foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -162,14 +163,17 @@ class ParseClass
                     if (! $this->isMagicMethod($method->getName()) && $method->isPublic() && $method->getName() !== 'initialize' && $method->getName() !== 'validate') {
                         $method_doc = $method->getDocComment();
                         //解析注释
-                        $info = $ParseDoc->parse($method_doc);
+                        $info = (new ParseDoc())->parse($method_doc);
                         $route = [
                             'title' => $info['title'] ?? '',
                             'group' => $class_docs['group'] ?? '',
                             'resource' => $class_docs['resource'] ?? '',
+                            'auth' => $class_docs['auth'] ?? '',
                             'version' => $info['version'] ?? '',
                             'param' => $info['param'] ?? [],
                             'route' => $info['route'] ?? '',
+                            'is_allow' => isset($info['is_allow']) ?? false,
+                            'info' => $info,
                         ];
                         if (! $route['route']) {
                             continue;
