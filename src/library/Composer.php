@@ -36,12 +36,12 @@ class Composer
      */
     public function packagesPsr4Autoload()
     {
-        $autoload_psr4 =include app()->getRootPath() . ('vendor/composer/autoload_psr4.php');
-        $root_path =         app()->getRootPath();
+        $autoload_psr4 = include app()->getRootPath() . ('vendor/composer/autoload_psr4.php');
+        $root_path = app()->getRootPath();
 
         foreach ($autoload_psr4 as &$item) {
             if (is_array($item)) {
-                foreach ($item as  &$value) {
+                foreach ($item as &$value) {
                     $value = str_replace($root_path, '', $value);
                 }
             } else {

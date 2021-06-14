@@ -298,6 +298,22 @@ function unique_random($len = 10)
  * @param int $length
  * @return string
  */
+function random_number($length)
+{
+    $pattern = '1234567890';
+    $key = '';
+    for ($i = 0; $i < $length; ++$i) {
+        $key .= $pattern[
+            mt_rand(0, 9)];    //生成php随机数
+    }
+    return $key;
+}
+
+/**
+ * 生成随机数.
+ * @param int $length
+ * @return string
+ */
 function random_keys($length)
 {
     $pattern = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLOMNOPQRSTUVWXYZ';
@@ -314,13 +330,41 @@ function random_keys($length)
  * @param int $length
  * @param mixed $prefix
  * @param mixed $random_length
+ * @param mixed $date
  * @return string
  */
-function time_trade_no($prefix = null, $random_length = 4)
+function time_trade_no($prefix = null, $random_length = 4, $date = 'YmdHis')
 {
     $pattern = '1234567890';
-    $key = date('YmdHis');
+    $key = '';
+    if ($date) {
+        $key = date($date);
+    }
     for ($i = 0; $i < $random_length; ++$i) {
+        $key .= $pattern[
+            mt_rand(0, 9)];    //生成php随机数
+    }
+    if ($prefix) {
+        $key = $prefix . $key;
+    }
+    return $key;
+}
+/**
+ * 获取会员卡号.
+ * @param int $length
+ * @param mixed $prefix
+ * @param mixed $random_length
+ * @param mixed $date
+ * @return string
+ */
+function member_card_no($prefix = null, $date = 'YmdHis', $length = 4)
+{
+    $pattern = '1234567890';
+    $key = '';
+    if ($date) {
+        $key = date($date);
+    }
+    for ($i = 0; $i < $length; ++$i) {
         $key .= $pattern[
             mt_rand(0, 9)];    //生成php随机数
     }

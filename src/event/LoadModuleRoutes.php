@@ -26,7 +26,7 @@ class LoadModuleRoutes
      */
     public function handle(): void
     {
-        Cache::tag(['class_list', 'routes_list'])->clear();
+        // Cache::tag(['class_list', 'routes_list'])->clear();
 
         $app = app();
         $class = new ParseClass();
