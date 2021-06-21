@@ -156,6 +156,7 @@ class ParseClass
                     'resource' => str_replace('_', '/', $paras_result['resource']) ?? '',
                     'version' => $paras_result['version'] ?? '',
                     'auth' => $paras_result['auth'] ?? '',
+                    // 'hide' => $paras_result['hide'] ? (bool) $paras_result['hide'] : false,
                 ];
                 $method_docs = [];
                 foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -173,6 +174,7 @@ class ParseClass
                             'param' => $info['param'] ?? [],
                             'route' => $info['route'] ?? '',
                             'is_allow' => isset($info['is_allow']) ?? false,
+                            // 'hide' => $info['hide'] ? (bool) $info['hide'] : false,
                             'info' => $info,
                         ];
                         if (! $route['route']) {
@@ -239,6 +241,7 @@ class ParseClass
                     'group' => $paras_result['group'] ?? '',
                     'resource' => str_replace('_', '/', $paras_result['resource']) ?? '',
                     'version' => $paras_result['version'] ?? '',
+                    'hide' => isset($paras_result['hide']) ? (bool) $paras_result['hide'] : false,
                 ];
                 $method_docs = [];
                 foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -255,6 +258,8 @@ class ParseClass
                             'version' => $info['version'] ?? '',
                             'param' => $info['param'] ?? [],
                             'route' => $info['route'] ?? '',
+                            'hide' => isset($info['hide']) ? (bool) $info['hide'] : false,
+                            // 'hide' => (bool) $info['hide'] ?? false,
                         ];
                         if (! $route['route']) {
                             continue;

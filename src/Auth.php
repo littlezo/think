@@ -32,7 +32,7 @@ class Auth
     protected $guard;
 
     // 默认获取
-    protected $username = 'username';
+    protected $account = 'account';
 
     // 校验字段
     protected $password = 'password';
@@ -77,9 +77,9 @@ class Auth
             throw new LoginFailedException();
         }
         if ($user->status == $user::$disable) {
-            throw new LoginFailedException('该用户已被禁用|' . $user->username ?? null, Code::USER_FORBIDDEN);
+            throw new LoginFailedException('该用户已被禁用|' . $user->account ?? null, Code::USER_FORBIDDEN);
         }
-        if ($this->checkPassword && ! password_verify($condition['password'] ?? 'no', $user->password)) {
+        if ($this->checkPassword && ! password_verify($condition['password'] ?? '', $user->password)) {
             throw new LoginFailedException('登录失败,密码错误');
         }
         return $this->{$this->getDriver()}($user);
@@ -136,9 +136,9 @@ class Auth
      * @param $field
      * @return $this
      */
-    public function username($field): self
+    public function account($field): self
     {
-        $this->username = $field;
+        $this->account = $field;
 
         return $this;
     }
@@ -213,6 +213,7 @@ class Auth
     protected function authenticate($condition)
     {
         $provider = $this->getProvider();
+        // return $this->{$provider['driver']};
         return $this->{$provider['driver']}($condition);
     }
 

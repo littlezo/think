@@ -22,12 +22,17 @@ use PhpParser\Node\Scalar\String_;
 
 class Arr
 {
-    public function build($fields)
+    public function build($fields, $key = 'name', $valve = false)
     {
         $items = [];
 
         foreach ($fields as $field) {
-            $arrItem = new ArrayItem(new String_($field['name']));
+            // dd($field);
+            if ($valve) {
+                $arrItem = new ArrayItem(new String_($field[$key]), new String_($field[$valve]));
+            } else {
+                $arrItem = new ArrayItem(new String_($field[$key]));
+            }
             if ($field['comment']) {
                 $arrItem->setDocComment(
                     new Doc('// ' . $field['comment'])

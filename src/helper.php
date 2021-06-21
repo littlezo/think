@@ -17,6 +17,45 @@ use think\Exception;
 use think\facade\Event;
 
 /*基础函数*/
+
+/**
+ * @method 多维数组转字符串
+ * @param type $array
+ * @param mixed $arr
+ * @return type $string
+ */
+function multi_array_to_string($arr)
+{
+    if (is_array($arr)) {
+        return implode(',', array_map('multi_array_to_string', $arr));
+    }
+    return $arr;
+}
+function array_to_string($arr)
+{
+    if (is_array($arr)) {
+        return implode(',', $arr);
+    }
+    return $arr;
+}
+/**
+ * @method 多维数组变成一维数组
+ * @param type $array
+ * @param mixed $result
+ * @return type $array
+ */
+function multi_array_to_array($array, &$result = [])
+{
+    foreach ($array as $key => $value) {
+        if (is_array($value)) {
+            multi_array_to_array($value, $result);
+        } else {
+            $result[] = $value;
+        }
+    }
+    return $result;
+}
+
 /**
  * 把返回的数据集转换成Tree.
  *
@@ -283,14 +322,15 @@ function date_to_time($date)
 
 /**
  * 获取唯一随机字符串.
- * @param int $len
+ * @param int $length
+ * @param string $prefix
  * @return string
  */
-function unique_random($len = 10)
+function unique_random($prefix = 'lz', $length = 8)
 {
     $str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLOMNOPQRSTUVWXYZ';
     str_shuffle($str);
-    return 'lz_' . substr(str_shuffle($str), 0, $len) . date('is');
+    return $prefix . substr(str_shuffle($str), 0, $length) . date('is');
 }
 
 /**
@@ -312,9 +352,10 @@ function random_number($length)
 /**
  * 生成随机数.
  * @param int $length
+ * @param string $prefix
  * @return string
  */
-function random_keys($length)
+function random_keys($prefix = null, $length = 8)
 {
     $pattern = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLOMNOPQRSTUVWXYZ';
     $key = '';
@@ -322,7 +363,7 @@ function random_keys($length)
         $key .= $pattern[
             mt_rand(0, 35)];    //生成php随机数
     }
-    return $key;
+    return $prefix . $key;
 }
 
 /**

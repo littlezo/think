@@ -104,9 +104,22 @@ class Model extends Factory
                     $class->when($this->hasTableExists($table), function ($class) use ($table) {
                         $class->addProperty(
                             (new Property('field'))->default(
+                                // dd(Db::getFields($table))
                                 (new Arr())->build(Db::getFields($table))
                             )->docComment('// 数据库字段映射')
                         );
+                    });
+                    $class->when($this->jsonField($table), function ($class) use ($table) {
+                        $class->addProperty(
+                            (new Property('json'))->default(
+                                $this->jsonField($table)
+                                // new Array_($items)
+                            )->docComment('// 设置json类型字段')
+                        );
+                        $class->addProperty(
+                            (new Property('jsonAssoc'))->default(true)->docComment('//  设置JSON数据返回数组')
+                        );
+                        // dd($this->jsonField($table));
                     });
                 }
             )->getContent();
@@ -163,6 +176,24 @@ class Model extends Factory
     }
 
     /**
+     * json字段.
+     *
+     * @param $table
+     */
+    protected function jsonField($table)
+    {
+        $fields = Db::getFields($table);
+        $items = false;
+        foreach ($fields as $field => $item) {
+            // dd($type);
+            if ($item['type'] === 'json') {
+                $items[] = $field;
+            }
+        }
+        return $items;
+    }
+
+    /**
      * 提供模型字段属性提示.
      *
      * @param $table
@@ -170,7 +201,7 @@ class Model extends Factory
     protected function buildClassComment($table): string
     {
         $fields = Db::name(Utils::tableWithoutPrefix($table))->getFieldsType();
-
+        // dd($fields);
         $comment = '/**' . PHP_EOL . ' *' . PHP_EOL;
 
         foreach ($fields as $field => $type) {
