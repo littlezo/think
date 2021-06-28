@@ -1,10 +1,10 @@
 <?php
 
 declare(strict_types=1);
-/**
+/*
  * #logic 做事不讲究逻辑，再努力也只是重复犯错
- * ## 何为相思：不删不聊不打扰，可否具体点：曾爱过。何为遗憾：你来我往皆过客，可否具体点：再无你。.
- *
+ * ## 何为相思：不删不聊不打扰，可否具体点：曾爱过。何为遗憾：你来我往皆过客，可否具体点：再无你。
+ * ## 只要思想不滑稽，方法总比苦难多！
  * @version 1.0.0
  * @author @小小只^v^ <littlezov@qq.com>  littlezov@qq.com
  * @contact  littlezov@qq.com
@@ -15,251 +15,223 @@ declare(strict_types=1);
  */
 namespace littler\generate\factory;
 
+use littler\BaseController;
 use littler\exceptions\FailedException;
 use littler\facade\FileSystem;
-use littler\generate\build\Build;
-use littler\generate\build\classes\Classes;
-use littler\generate\build\classes\Methods;
-use littler\generate\build\classes\Property;
-use littler\generate\build\classes\Traits;
-use littler\generate\build\classes\Uses;
-use littler\Utils;
-use think\facade\Db;
-use think\helper\Str;
+use littler\JWTAuth\Middleware\Jwt;
+use littler\Request;
+use littler\Response;
+use Nette\PhpGenerator\PhpFile;
 
 class Controller extends Factory
 {
-    protected $methods = [];
+	protected $methods = [];
 
-    protected $uses = [
-        'littler\Request',
-        'littler\Response',
-        'littler\BaseController',
-    ];
+	protected $uses = [
+		'littler\Request',
+		'littler\Response',
+		'littler\BaseController',
+	];
 
-    /**
-     * @param $params
-     * @return bool|string|string[]
-     */
-    public function done(array $params)
-    {
-        if (strpos($params['controller'], 'Has')) {
-            return false;
-        }
-        // 写入成功之后
-        $repositoryPath = $this->getGeneratePath($params['controller_repository']);
-        $controllerPath = $this->getGeneratePath($params['controller']);
-        $this->getTraitsContent($params);
-        $this->getControllerContent($params);
-        try {
-            if (! FileSystem::put($repositoryPath, $this->getTraitsContent($params))) {
-                throw new FailedException($params['controller'] . ' generate failed~');
-            }
-            if (! file_exists($controllerPath)) {
-                FileSystem::put($controllerPath, $this->getControllerContent($params));
-            }
-            return $controllerPath;
-        } catch (\Throwable $exception) {
-            throw new \Exception((string) $exception->getTraceAsString());
-        }
-    }
+	protected $header = <<<'EOF'
+		#logic 做事不讲究逻辑，再努力也只是重复犯错
+		## 何为相思：不删不聊不打扰，可否具体点：曾爱过。何为遗憾：你来我往皆过客，可否具体点：再无你。
+		## 只要思想不滑稽，方法总比苦难多！
+		@version 1.0.0
+		@author @小小只^v^ <littlezov@qq.com>  littlezov@qq.com
+		@contact  littlezov@qq.com
+		@link     https://github.com/littlezo
+		@document https://github.com/littlezo/wiki
+		@license  https://github.com/littlezo/MozillaPublicLicense/blob/main/LICENSE
 
-    /**
-     * 获取内容.
-     *
-     * @param $params
-     * @return bool|string|string[]
-     */
-    public function getTraitsContent($params)
-    {
-        if (! $params['controller_repository']) {
-            throw new FailedException('params has lost～');
-        }
-        [$className, $namespace] = $this->parseFilename($params['controller_repository']);
-        $is_use_model = $params['model'];
-        if ($is_use_model) {
-            [$model, $modelNamespace] = $this->parseFilename($params['model']);
-            $asModel = ucfirst(Str::contains($model, 'Model') ? $model : $model . 'Model');
-        }
+		EOF;
 
-        if (! $className) {
-            throw new FailedException('未填写控制器名称');
-        }
+	/**
+	 * @param $params
+	 * @return bool|string|string[]
+	 */
+	public function done(array $params)
+	{
+		if (strpos($params['controller'], 'Has')) {
+			return false;
+		}
+		$repository = $this->getTraitContent($params);
+		$repositoryFile = $this->getGeneratePath($params['controller_repository']);
+		$content = $this->getContent($params);
+		$filePath = $this->getGeneratePath($params['controller']);
 
-        $use = new Uses();
-        $class = new Classes($className, 'trait');
-        // dd($class);
-        return (new Build())->namespace($namespace)
-            ->use($use->name('littler\Request'))
-            ->use($use->name('littler\Response'))
-            ->use($use->name($modelNamespace . '\\' . ucfirst($model), $asModel))
-            ->class(
-                $class->docComment(),
-                function (Classes $class) use ($model, $asModel) {
-                    foreach ($this->getMethods($model, $asModel) as $method) {
-                        $class->addMethod($method);
-                    }
+		try {
+			if (! FileSystem::put($repositoryFile, $repository)) {
+				throw new FailedException($params['controller_repository'] . ' generate failed~');
+			}
+			// echo $content;
+			// dd();
+			// if (! file_exists($path)) {
+			FileSystem::put($filePath, $content);
+			// }
+			return $filePath;
+		} catch (\Throwable $exception) {
+			throw new \Exception((string) $exception->getTraceAsString());
+		}
+	}
 
-                    $class->addProperty(
-                        (new Property('model'))->protected()
-                    );
-                }
-            )
-            ->getContent();
-    }
+	/**
+	 * 获取内容.
+	 *
+	 * @param $params
+	 * @return bool|string|string[]
+	 */
+	public function getTraitContent($params)
+	{
+		if (! $params['service']) {
+			throw new FailedException('params has lost～');
+		}
+		[$className, $classNamespace] = $this->parseFilename($params['controller_repository']);
+		$use = $params['service'];
 
-    /**
-     * 获取内容.
-     *
-     * @param $params
-     * @return bool|string|string[]
-     */
-    public function getControllerContent($params)
-    {
-        if (! $params['controller']) {
-            throw new FailedException('params has lost～');
-        }
-        [$className, $namespace] = $this->parseFilename($params['controller']);
+		if (! $className) {
+			throw new FailedException('未填写控制器名称');
+		}
 
-        [$repository, $repositoryNamespace] = $this->parseFilename($params['controller_repository']);
+		$file = new PhpFile();
+		$file->setStrictTypes();
+		$file->addComment($this->header);
+		$namespace = $file->addNamespace($classNamespace);
 
-        if (! $className) {
-            throw new FailedException('未填写控制器名称');
-        }
+		$namespace->addUse(Request::class)
+			->addUse(Response::class);
 
-        $use = new Uses();
-        $class = new Classes($className);
-        $_namespace = explode('\\', $namespace);
-        $_group = $_namespace[2] ?? '' . '/' . $_namespace[1] ?? '';
-        $_resource = str_replace('_', '/', Str::snake($className));
-        $table = Utils::tableWithPrefix($params['table']);
-        $database = config('database.connections.mysql.database');
-        $sql = sprintf("Select table_name %s ,TABLE_COMMENT from INFORMATION_SCHEMA.TABLES Where table_schema = '%s' AND table_name LIKE '%s'", $table, $database, $table);
-        $table_comment = Db::query($sql);
-        $title = $table_comment[0]['TABLE_COMMENT'] ?? $className;
-        $date = date('Y年m月d日 H:i');
-        return (new Build())->namespace($namespace)
-            ->use($use->name($params['controller_repository']))
-            ->use($use->name('littler\BaseController', 'Controller'))
-            ->use($use->name('littler\Request'))
-            ->use($use->name('littler\Response'))
-            ->class(
-                $class->extend('Controller')
-                    ->addTrait((new Traits())->use($repository))
-                    ->docComment(
-                        <<<TEXT
+		if ($use) {
+			$namespace->addUse($use);
+		}
+		$namespace->addUse(Jwt::class);
+		$class = $namespace->addClass($className)
+			->setTrait()
+			->addComment('@desc 禁止在此写业务逻辑，执行生成后将被覆盖');
+		$class->addProperty('service')
+			->setProtected()
+			->addComment('@Inject()')
+			->addComment('@var ' . $namespace->unresolveName($use));
+		$method = $class->addMethod('index')
+			->addComment('@title 分页列表')
+			->addComment('@Route("index", method="GET")')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::paginate($this->service->paginate($request->get()));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		$method = $class->addMethod('read')
+			->addComment('@title 详情')
+			->addComment('@Route("read/:id", method="GET")')
+			->addComment('@param int $id 主键id')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::success($this->service->info($id));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		$method->addParameter('id')
+			->setType('int');
+		$method = $class->addMethod('save')
+			->addComment('@title 列表')
+			->addComment('@Route("save", method="POST")')
+			->addComment('@param array $args 待写入数据')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::success($this->service->save($request->post()));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		$method = $class->addMethod('update')
+			->addComment('@title 更新')
+			->addComment('@Route("update/:id", method="PUT")')
+			->addComment('@param int $id 主键ID')
+			->addComment('@param array $args 待更新的数据')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::success($this->service->update($id,$request->post()));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		$method->addParameter('id')
+			->setType('int');
+		$method = $class->addMethod('delete')
+			->addComment('@title 删除')
+			->addComment('@param int $id 要删除的数据ID')
+			->addComment('@Route("delete/:id", method="DELETE")')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::success($this->service->delete($id));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		$method->addParameter('id')
+			->setType('int');
+		return $file;
+	}
 
-                            /**
-                             * @title {$title}
-                             * @time {$date}
-                             * @Group("{$_group}")
-                             * @Resource("{$_resource}")
-                             * @version 1.0.0
-                             */
+	/**
+	 * 获取内容.
+	 *
+	 * @param $params
+	 * @return bool|string|string[]
+	 */
+	public function getContent($params)
+	{
+		if (! $params['service']) {
+			throw new FailedException('params has lost～');
+		}
+		[$className, $classNamespace] = $this->parseFilename($params['controller']);
+		$use = $params['service'];
 
-                            TEXT
-                    ),
-                function () {
-                }
-            )
-            ->getContent();
-    }
+		if (! $className) {
+			throw new FailedException('未填写控制器名称');
+		}
 
-    /**
-     * 方法集合.
-     *
-     * @param $model
-     * @param mixed $asModel
-     * @return array
-     */
-    protected function getMethods($model, $asModel)
-    {
-        $date = date('Y年m月d日 H:i:s');
-        $model = lcfirst($model);
-        return [
-            (new Methods('__construct'))
-                ->public()
-                ->param($asModel, ucfirst($asModel))
-                ->docComment("\r\n")
-                ->declare('model', $asModel),
+		$file = new PhpFile();
+		$file->setStrictTypes();
+		$file->addComment($this->header);
+		$namespace = $file->addNamespace($classNamespace);
 
-            (new Methods('index'))->public()
-                ->param('request', 'Request')
-                ->docComment(
-                    <<<TEXT
+		$namespace->addUse(Request::class)
+			->addUse(Response::class)
+			->addUse(BaseController::class, 'Controller')
+			->addUse($params['controller_repository']);
 
-                        /**
-                         * @title 列表
-                         * @time {$date}
-                         * @var Request \$request
-                         * @Route(get, /index)
-                         */
-                        TEXT
-                )
-                ->returnType('\think\Response')->index('model'),
-
-            (new Methods('save'))
-                ->public()
-                ->param('request', 'Request')
-                ->docComment(
-                    <<<TEXT
-
-                        /**
-                         * @title 保存
-                         * @time {$date}
-                         * @var Request \$request
-                         * @Route(post, /save)
-                         */
-                        TEXT
-                )
-                ->returnType('\think\Response')
-                ->save('model'),
-
-            (new Methods('read'))->public()
-                ->param('id')
-                ->docComment(
-                    <<<TEXT
-
-                        /**
-                         * @title 读取
-                         * @time {$date}
-                         * @Route(get, /read/:id)
-                         * @param int \$id
-                         */
-                        TEXT
-                )
-                ->returnType('\think\Response')->read('model'),
-
-            (new Methods('update'))->public()
-                ->param('request', 'Request')
-                ->param('id')
-                ->docComment(
-                    <<<TEXT
-
-                        /**
-                         * @title 更新
-                         * @time {$date}
-                         * @Route(put, /update/:id)
-                         * @param int \$id
-                         */
-                        TEXT
-                )
-                ->returnType('\think\Response')->update('model'),
-
-            (new Methods('delete'))->public()
-                ->param('id')
-                ->docComment(
-                    <<<TEXT
-
-                        /**
-                         * @title 删除
-                         * @time {$date}
-                         * @Route(delete, /delete/:id)
-                         * @param int \$id
-                         */
-                        TEXT
-                )
-                ->returnType('\think\Response')->delete('model'),
-        ];
-    }
+		if ($use) {
+			$namespace->addUse($use);
+		}
+		$namespace->addUse(Jwt::class);
+		$class = $namespace->addClass($className)
+			->setExtends(BaseController::class)
+			->addTrait($params['controller_repository'])
+			->addComment(sprintf('@title("%s")', $params['extra']['title']))
+			->addComment(sprintf('@Class %s', $className))
+			->addComment(sprintf('@package %s', $classNamespace))
+			->addComment(sprintf('@Group("%s")', $params['extra']['layer']))
+			->addComment(sprintf('@Resource("%s")', $params['extra']['module']))
+			->addComment(sprintf('@Middleware({littler\JWTAuth\Middleware\Jwt::class,"%s"})', $params['extra']['auth']))
+			->addComment('@desc 禁止在控制器写业务逻辑，执行生成后将被覆盖');
+		$class->addProperty('service')
+			->setProtected()
+			->addComment('@Inject()')
+			->addComment('@var ' . $namespace->unresolveName($use));
+		$method = $class->addMethod('list')
+			->addComment('@title 非分页列表')
+			->addComment('@Route("list", method="GET")')
+			->addComment('@return \think\Response')
+			->addComment('@desc 其他参数详见快速查询 与字段映射')
+			->setReturnType('think\Response')
+			->setReturnNullable()
+			->setBody('return Response::success($this->service->list($request->get()));');
+		$method->addParameter('request')
+			->setType(Request::class);
+		return $file;
+	}
 }

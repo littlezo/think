@@ -1,18 +1,18 @@
 {
-    "name": "{MODULE}",
+  "name": "{MODULE}",
 	"title": "{NAME}",
 	"description": "{DESCRIPTION}",
 	"version": "1.0.0",
 	"keywords": {KEYWORDS},
 	"order": 100,
-	"services": [
-        "{SERVICE}"
-    ],
+	"services": ["{SERVICE}"],
 	"aliases": {},
 	"files": [],
 	"requires": [],
 	"enable": true,
+	"debug": true,
 	"author": "@小小只^v^",
 	"content": "",
-	"version_no": "{VERSION_NO}"
+	"version_no": "{VERSION_NO}",
+  "ignore": ["{IGNORE}"]
 }
