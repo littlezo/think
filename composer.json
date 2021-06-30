@@ -25,7 +25,8 @@
     "guzzlehttp/guzzle": "*",
     "nette/php-generator": "^3.5.0",
     "nikic/php-parser": "^4.10",
-    "doctrine/annotations": "^1.13",
+    "littler/annotations": "dev-main",
+    "littler/jwt-auth": "dev-main",
     "symfony/serializer": "^5.3",
     "nette/utils": "^3.2",
     "dragonmantank/cron-expression": "^3.1"
