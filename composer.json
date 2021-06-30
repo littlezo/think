@@ -27,6 +27,7 @@
     "nikic/php-parser": "^4.10",
     "doctrine/annotations": "^1.13",
     "symfony/serializer": "^5.3",
+    "nette/utils": "^3.2",
     "dragonmantank/cron-expression": "^3.1"
   },
   "require-dev": {

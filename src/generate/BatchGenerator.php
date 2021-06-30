@@ -80,9 +80,9 @@ class BatchGenerator
 				];
 			}
 			$generate_items[$module]['generate'][] = [
-				'model' => sprintf('%s\\%s\\model\\%s', $namespace, $module, isset($table_info[1]) ? $name : 'index'),
+				'model' => sprintf('%s\\%s\\model\\%s', $namespace, $module, $name),
 				'model_repository' =>  sprintf('%s\\%s\\repository\\model\\%sAbstract', $namespace, $module, $name),
-				'controller' => sprintf('%s\\%s\\%s\\controller\\%s', $namespace, $module, $layer, $name),
+				'controller' => sprintf('%s\\%s\\%s\\controller\\%s', $namespace, $module, $layer, isset($table_info[1]) ? $name : 'Index'),
 				'controller_repository' => sprintf('%s\\%s\\repository\\%s\\%sTrait', $namespace, $module, $layer, $name),
 				'event' =>  sprintf('%s\\%s\\event\\%s', $namespace, $module, $name),
 				'service' =>  sprintf('%s\\%s\\service\\%s\\%sService', $namespace, $module, $layer, $name),
@@ -98,51 +98,40 @@ class BatchGenerator
 				],
 			];
 		}
-		// dd($generate_items);
-
 		foreach ($generate_items as $item) {
-			// var_dump($item['info']);
-			// var_dump($item['info']['module']);
 			$module_info = App::getModuleInfo($item['info']['module']);
 			$module_ignore = $module_info['ignore'] ?? false;
 			if (! $module_ignore) {
 				(new Module())->done($item['info']);
 				$module_ignore = $item['info']['ignore'];
 			}
-
-			// dd($module_ignore);
-			// $module_info = App::getModuleInfo($item['info']['module']);
-			// $module_ignore = $module_info['ignore'] ?? false;
 			foreach ($item['generate'] as $generate) {
-				// echo $generate['table'] . '=====>' . in_array($generate['table'], $module_ignore, true) . PHP_EOL;
+				// if ($generate['table'] =='goods') {
+				// 	dd($module_ignore);
+				// }
 				if (! in_array($generate['table'], (array) $module_ignore, true)) {
-					// continue;
+					$message[] = $this->execute($generate);
+				} else {
+					$generate['controller']=null;
+					$generate['controller_repository']=null;
+					// dd($generate);
 					$message[] = $this->execute($generate);
 				}
-				// dd($generate['table']);
 			}
-
-			// $message[] = $this->execute($item);
 		}
 		return 'generate successfully';
-		//json_encode($message);
 	}
 
 	protected function execute($params)
 	{
-		// dd($params);
 		$message = [];
 		$files = [];
 		try {
 			if ($params['service']) {
 				$files[] = (new Service())->done($params);
 				array_push($message, 'service created successfully');
-				// exit(0);
 			}
-			// if ($params['event']) {
-			// 	$files[] = (new Event())->done($params);
-			// 	array_push($message, 'event created successfully');
-			// }
+
 			if ($params['model']) {
 				$files[] = (new Model())->done($params);
 				array_push($message, 'model created successfully');
@@ -151,12 +140,17 @@ class BatchGenerator
 				$files[] = (new Controller())->done($params);
 				array_push($message, 'controller created successfully');
 			}
+			if ($params['event']) {
+				(new Event())->done($params);
+				// array_push($message, 'event created successfully');
+			}
 			// if ($params['controller']) {
 			// 	(new Route())->controller($params['controller'])
 			// 		->restful(true)
 			// 		->layer('admin')
 			// 		->done($params);
 			// }
+			return 'success';
 		} catch (\Throwable $exception) {
 			throw new FailedException((string) $exception->getMessage());
 		}

@@ -15,6 +15,7 @@ declare(strict_types=1);
  */
 namespace littler\generate\factory;
 
+use littler\annotation\Inject;
 use littler\BaseModel;
 use littler\exceptions\FailedException;
 use littler\facade\FileSystem;
@@ -52,11 +53,11 @@ class Model extends Factory
 		$repositoryFile = $this->getGeneratePath($params['model_repository']);
 		FileSystem::put($repositoryFile, $repository);
 		$content = $this->getContent($params);
-		$filePath = $this->getGeneratePath($params['model']);
-		if (! file_exists($filePath)) {
-			FileSystem::put($filePath, $content);
+		$contentPath = $this->getGeneratePath($params['model']);
+		if (! file_exists($contentPath)) {
+			FileSystem::put($contentPath, $content);
 		}
-		return $filePath;
+		return $contentPath;
 	}
 
 	/**
@@ -80,11 +81,12 @@ class Model extends Factory
 		if (! $className) {
 			throw new FailedException('model name not set');
 		}
-		$file = new PhpFile();
-		$file->setStrictTypes();
-		$file->addComment($this->header);
-		$namespace = $file->addNamespace($classNamespace);
+		$content = new PhpFile();
+		$content->setStrictTypes();
+		$content->addComment($this->header);
+		$namespace = $content->addNamespace($classNamespace);
 		$namespace->addUse(BaseModel::class, 'Model')
+		->addUse(Inject::class)
 			->addUse(BaseOptionsTrait::class)
 			->addUse(RewriteTrait::class);
 		$fields_type = Db::name(Utils::tableWithoutPrefix($table))->getFieldsType();
@@ -174,7 +176,7 @@ class Model extends Factory
 		$class->addProperty('field', $write_field)
 			->setProtected()
 			->addComment(PHP_EOL . '@var array $field 允许写入字段');
-		return $file;
+		return $content;
 	}
 
 	/**
@@ -196,15 +198,15 @@ class Model extends Factory
 			throw new FailedException('model name not set');
 		}
 		$repository = $params['model_repository'];
-		$file = new PhpFile();
-		$file->setStrictTypes();
-		$file->addComment($this->header);
-		$namespace = $file->addNamespace($classNamespace);
+		$content = new PhpFile();
+		$content->setStrictTypes();
+		$content->addComment($this->header);
+		$namespace = $content->addNamespace($classNamespace);
 		$namespace->addUse($repository)
 			->addClass($className)
 			->setExtends($repository)
 			->addComment(PHP_EOL . sprintf('%s 模型', $params['extra']['title']));
 
-		return $file;
+		return $content;
 	}
 }

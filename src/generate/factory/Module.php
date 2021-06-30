@@ -18,11 +18,22 @@ namespace littler\generate\factory;
 use littler\App;
 use littler\facade\FileSystem;
 use littler\library\Composer;
+use Nette\PhpGenerator\Dumper;
 
 class Module
 {
+	/**
+	 * module.
+	 *
+	 * @var string
+	 */
 	protected $module;
 
+	/**
+	 * moduleDir.
+	 *
+	 * @var string
+	 */
 	protected $moduleDir;
 
 	/**
@@ -79,7 +90,6 @@ class Module
 
 	public function done($params)
 	{
-		// dd($params);
 		try {
 			$this->module = $params['module'];
 
@@ -145,7 +155,6 @@ class Module
 	 */
 	protected function createDir()
 	{
-		// dd($this->modulePath());
 		foreach ($this->modulePath() as $path) {
 			App::makeDirectory($path);
 		}
@@ -173,12 +182,10 @@ class Module
 
 		$content = str_replace(
 			['{NAMESPACE}', '{SERVICE}'],
-			[$this->namespaces,
+			[$this->namespaces . '\\' . $this->module,
 				'Service', ],
 			$service
 		);
-		// dd($content);
-		// dd($content);
 		FileSystem::put($this->moduleDir . 'Service.php', $content);
 	}
 
@@ -193,7 +200,11 @@ class Module
 		foreach (explode(',', $this->keywords) as $k) {
 			$keywords .= "\"{$k}\",";
 		}
-		// dd($this->ignore);
+		$ignore = '';
+		foreach ($this->ignore as $item) {
+			$ignore .= "\"{$item}\",";
+		}
+		$dumper = new Dumper();
 		$content = str_replace(
 			['{NAME}', '{DESCRIPTION}', '{MODULE}', '{KEYWORDS}', '{SERVICE}', '{VERSION_NO}', '{IGNORE}'],
 			[
@@ -201,10 +212,11 @@ class Module
 				$this->description,
 				$this->module,
 				trim($keywords, ','),
-				'\\\\' . str_replace('\\', '\\\\', $this->namespaces . '\\' . 'Service'),
+				'\\\\' . str_replace('\\', '\\\\', $this->namespaces . '\\' . $this->module . '\\' . 'Service'),
 				date('Ymd', time()),
 				// $this->ignore,
-				implode(',', $this->ignore),
+				trim($ignore, ','),
+				// implode(',', $this->ignore),
 			],
 			$infoJson
 		);
