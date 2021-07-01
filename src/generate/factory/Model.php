@@ -154,9 +154,9 @@ class Model extends Factory
 		$class->addProperty('schema', $schema)
 			->setProtected()
 			->addComment(PHP_EOL . '@var array $schema 字段信息');
-		$class->addProperty('type', $type_item)
-			->setProtected()
-			->addComment(PHP_EOL . '@var array $type 字段类型自动转换');
+		// $class->addProperty('type', $type_item)
+		// 	->setProtected()
+		// 	->addComment(PHP_EOL . '@var array $type 字段类型自动转换');
 		$class->addProperty('json', $json_field)
 			->setProtected()
 			->addComment(PHP_EOL . '@var array $json JSON类型字段');
@@ -176,7 +176,7 @@ class Model extends Factory
 				->addComment(PHP_EOL . '@var array $updateTime 关闭更新时间自动写入');
 		}
 		$class->addProperty('field', $write_field)
-			->setProtected()
+			->setPublic()
 			->addComment(PHP_EOL . '@var array $field 允许写入字段');
 		return $content;
 	}

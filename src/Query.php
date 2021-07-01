@@ -142,8 +142,9 @@ class Query extends \think\db\Query
 		foreach ($requestParams as $field => $value) {
 			// 排除不存在字段
 			// echo str_replace(['start_,end_,like_,max_,min_,size,page,left_like_,right_like_,'], '', $field) . PHP_EOL;
+			// dd($this->model->field);
 			if (! in_array(str_replace(['start_,end_,like_,left_like_,right_like_,max_,min_,size,page'], '', $field), $this->model->field, true, )) {
-				// continue;
+				continue;
 			}
 			if (isset($params[$field])) {
 				// ['>', value] || value

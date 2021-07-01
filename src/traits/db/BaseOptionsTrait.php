@@ -54,12 +54,12 @@ trait BaseOptionsTrait
 	}
 
 	/**
-	 * @return bool
+	 * @return int||bool
 	 */
 	public function storeBy(array $data)
 	{
 		if ($this->allowField($this->field)->save($this->filterData($data))) {
-			return $this->{$this->getAutoPk()};
+			return (int) $this->{$this->getAutoPk()};
 		}
 
 		return false;

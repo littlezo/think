@@ -57,7 +57,63 @@ function multi_array_to_array($array, &$result = [])
 	}
 	return $result;
 }
+/**
+ * 是否关联数组.
+ * @param array $arr
+ * @return bool
+ */
+function is_assoc($arr)
+{
+	return count(array_filter(array_keys($arr), 'is_string')) > 0;
+}
 
+/**
+ * 合并两个多维数组.
+ * @param array $a1
+ * @param array $a2
+ * @return array
+ */
+function array_merge_many($a1, $a2)
+{
+	$arr = array_merge($a1, $a2);
+	foreach ($arr as $k => $v) {
+		if (is_array($v) && isset($a1[$k]) && isset($a2[$k])) {
+			$arr[$k] = array_merge_many($a1[$k], $a2[$k]);
+		}
+	}
+	return $arr;
+}
+
+/**
+ * 合并两个多维数组@以第一个数组为模板
+ * @param array $a1
+ * @param array $a2
+ * @return array
+ */
+function array_merge_many_only($a1, $a2)
+{
+	$arr = [];
+	foreach ($a1 as $k => $v) {
+		if (isset($a2[$k])) {
+			if (gettype($a1[$k]) == gettype($a2[$k])) {
+				if (is_array($v)) {
+					if (is_assoc($a1[$k]) == is_assoc($a2[$k])) {
+						$arr[$k] = array_merge($v, $a2[$k]);
+					} else {
+						$arr[$k] = array_merge_many_only($v, $a2[$k]);
+					}
+				} else {
+					$arr[$k] = $a2[$k];
+				}
+			} else {
+				$arr[$k] = $v;
+			}
+		} else {
+			$arr[$k] = $v;
+		}
+	}
+	return $arr;
+}
 /**
  * 把返回的数据集转换成Tree.
  *

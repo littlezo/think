@@ -97,15 +97,7 @@ abstract class ModuleService extends Service
 	protected function registerConfig()
 	{
 		if (method_exists($this, 'loadConfig') && ! is_null($this->loadConfig())) {
-			foreach ($this->app->config->get() as $config_key => $config_value) {
-				foreach ($this->loadConfig() as $key => $value) {
-					if ($key == $config_key) {
-						$this->app->config->set(array_merge($config_value, $value), $config_key);
-					} else {
-						$this->app->config->set($value, $key);
-					}
-				}
-			}
+			$this->app->config->set(array_merge_many($this->app->config->get(), $this->loadConfig()));
 		}
 	}
 
