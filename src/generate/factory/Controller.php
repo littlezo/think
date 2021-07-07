@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace littler\generate\factory;
 
+use littler\annotation\docs\ApiDocs;
 use littler\annotation\Inject;
 use littler\annotation\Route;
 use littler\annotation\route\Group;
@@ -41,11 +42,68 @@ class Controller extends Factory
 		@version 1.0.0
 		@author @小小只^v^ <littlezov@qq.com>  littlezov@qq.com
 		@contact  littlezov@qq.com
-		@link     https://github.com/littlezo
+		@see     https://github.com/littlezo
 		@document https://github.com/littlezo/wiki
 		@license  https://github.com/littlezo/MozillaPublicLicense/blob/main/LICENSE
 
 		EOF;
+
+	protected $classDocs = <<<TEXT
+
+		    "title": "%s",
+		    "version": "1.0.0",
+		    "layer": "%s",
+		    "module": "%s",
+		    "group": "%s",
+		    "desc": "查询参数详见快速查询 字段含义参加字段映射"
+
+		TEXT;
+
+	protected $methodDocs = <<<'TEXT'
+
+		    "title": "%s",
+		    "version": "v1.0.0",
+		    "name": "%s",
+		    "headers": {
+		        "Authorization": "Bearer Token"
+		    },
+		    "desc": "查询参数详见快速查询 字段含义参加字段映射",
+		    "success": {
+		        "code": 200,
+		        "type": "success",
+		        "message": "成功消息||success",
+		        "timestamp": 1234567890,
+		        "result": {
+		            "encryptData": "加密数据自行解密",
+		        },
+		    },
+		    "error": {
+		        "code": 500,
+		        "message": "错误消息",
+		        "type": "error",
+		        "result": "",
+		        "timestamp": 1234567890
+		    },
+		    "param": {
+		        %s
+		    }
+
+		TEXT;
+
+	protected $pageParam = <<<'TEXT'
+		"page": {
+		            "required": false,
+		            "desc": "页数",
+		            "type": "int",
+		            "default": 1,
+		        },
+		        "size": {
+		            "required": false,
+		            "desc": "单页数量",
+		            "type": "int",
+		            "default": 10,
+		        }
+		TEXT;
 
 	/**
 	 * @param $params
@@ -107,7 +165,7 @@ class Controller extends Factory
 		if ($use) {
 			$namespace->addUse($use);
 		}
-		$namespace->addUse(Jwt::class);
+		// $namespace->addUse(Jwt::class);
 		$class = $namespace->addClass($className)
 			->setTrait()
 			->addComment('desc 禁止在此写业务逻辑，执行生成后将被覆盖');
@@ -116,21 +174,18 @@ class Controller extends Factory
 			->addComment('@Inject()')
 			->addComment('@var ' . $namespace->unresolveName($use));
 		$method = $class->addMethod('index')
-			->addComment('#title 分页列表')
-			->addComment(sprintf('@Route("/%s", method="GET")', Str::snake($classNameRoute)))
+			->addComment(sprintf('@Route("/%s", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '分页列表', 'delete', $this->pageParam)))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::paginate($this->service->paginate($request->get()));');
 		$method->addParameter('request')
 			->setType(Request::class);
-		$method = $class->addMethod('read')
-			->addComment('#title 详情')
-			->addComment(sprintf('@Route("/%s/:id", method="GET")', Str::snake($classNameRoute)))
-			->addComment('@param int $id 主键id')
+		$method = $class->addMethod('info')
+			->addComment(sprintf('@Route("/%s/:id", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '详情', 'delete', '')))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::success($this->service->info($id));');
@@ -139,23 +194,18 @@ class Controller extends Factory
 		$method->addParameter('id')
 			->setType('int');
 		$method = $class->addMethod('save')
-			->addComment('#title 保存')
-			->addComment(sprintf('@Route("/%s", method="POST")', Str::snake($classNameRoute)))
-			->addComment('@param array $args 待写入数据')
+			->addComment(sprintf('@Route("/%s", method="POST", ignore_verify=false)', Str::snake($classNameRoute)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '保存', 'delete', '')))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::success($this->service->save($request->post()));');
 		$method->addParameter('request')
 			->setType(Request::class);
 		$method = $class->addMethod('update')
-			->addComment('#title 更新')
-			->addComment(sprintf('@Route("/%s/:id", method="PUT")', Str::snake($classNameRoute)))
-			->addComment('@param int $id 主键ID')
-			->addComment('@param array $args 待更新的数据')
+			->addComment(sprintf('@Route("/%s/:id", method="PUT", ignore_verify=false)', Str::snake($classNameRoute)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '更新', 'delete', '')))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::success($this->service->update($id,$request->post()));');
@@ -164,11 +214,9 @@ class Controller extends Factory
 		$method->addParameter('id')
 			->setType('int');
 		$method = $class->addMethod('delete')
-			->addComment('#title 删除')
-			->addComment('@param int $id 要删除的数据ID')
-			->addComment(sprintf('@Route("/%s/:id", method="DELETE")', Str::snake($classNameRoute)))
+			->addComment(sprintf('@Route("/%s/:id", method="DELETE", ignore_verify=false)', Str::snake($classNameRoute)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '删除', 'delete', '')))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::success($this->service->delete($id));');
@@ -206,10 +254,11 @@ class Controller extends Factory
 			->addUse(Inject::class)
 			->addUse(Route::class)
 			->addUse(Resource::class)
-			->addUse(Group::class)
+			->addUse(Group::class, 'RouteGroup')
 			->addUse(Middleware::class)
 			->addUse(Validate::class)
 			->addUse(Response::class)
+			->addUse(ApiDocs::class)
 			->addUse(BaseController::class, 'Controller')
 			->addUse($params['controller_repository']);
 
@@ -217,25 +266,35 @@ class Controller extends Factory
 			$namespace->addUse($use);
 		}
 		$namespace->addUse(Jwt::class);
+		// var_dump($params['module']);
+		// var_dump($params['module']['title']);
+		// dd();
 		$class = $namespace->addClass($className)
 			->setExtends(BaseController::class)
 			->addTrait($params['controller_repository'])
-			->addComment(sprintf('#title %s', $params['extra']['title']))
 			->addComment(sprintf('Class %s', $className))
 			->addComment(sprintf('@package %s', $classNamespace))
-			->addComment(sprintf('@Group("%s")', $params['extra']['layer'] . '/' . $params['extra']['module']))
+			->addComment(sprintf('@RouteGroup("%s")', $params['extra']['layer'] . '/' . $params['extra']['module']))
 			// ->addComment(sprintf('@Resource("%s")', $className=='Index' ? $params['extra']['module'] . '/index' : $params['extra']['module']))
-			->addComment(sprintf('@Middleware({littler\JWTAuth\Middleware\Jwt::class,"%s"})', $params['extra']['auth']));
+
+			->addComment(sprintf('@Middleware({littler\JWTAuth\Middleware\Jwt::class,"%s"})', $params['extra']['auth']))
+			->addComment(sprintf('@apiDocs({%s})', sprintf(
+				$this->classDocs,
+				$params['extra']['title'],
+				$params['extra']['layer'],
+				// $params['module']['title'],
+				Str::snake($params['extra']['module']),
+				Str::snake($className)
+			)));
 		// ->addComment('desc 禁止在控制器写业务逻辑，执行生成后将被覆盖');
 		$class->addProperty('service')
 			->setProtected()
 			->addComment('@Inject()')
 			->addComment('@var ' . $namespace->unresolveName($use));
 		$method = $class->addMethod('list')
-			->addComment('#title 非分页列表')
-			->addComment(sprintf('@Route("/%s/list", method="GET")', Str::snake($className)))
+			->addComment(sprintf('@Route("/%s/list", method="GET", ignore_verify=false)', Str::snake($className)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '列表无分页', 'list', $this->pageParam)))
 			->addComment('@return \think\Response')
-			->addComment('desc 其他参数详见快速查询 与字段映射')
 			->setReturnType('think\Response')
 			->setReturnNullable()
 			->setBody('return Response::success($this->service->list($request->get()));');

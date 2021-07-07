@@ -15,6 +15,9 @@ declare(strict_types=1);
  *
  */
 
+if (! \class_exists('Signature')) {
+	require __DIR__ . '/Signature.php';
+}
 if (! \class_exists('ApiProtocol')) {
 	require __DIR__ . '/ApiProtocol.php';
 }

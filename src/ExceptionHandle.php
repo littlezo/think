@@ -19,15 +19,15 @@ namespace littler;
 
 use littler\exceptions\ApiException;
 use littler\exceptions\FailedException;
+use littler\JWTAuth\Exception\JWTException;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\exception\Handle;
 use think\exception\HttpException;
 use think\exception\HttpResponseException;
+use think\exception\RouteNotFoundException;
 use think\exception\ValidateException;
-use think\Response;
 use Throwable;
-use xiaodi\JWTAuth\Exception\JWTException;
 
 class ExceptionHandle extends Handle
 {
@@ -58,9 +58,13 @@ class ExceptionHandle extends Handle
 	 * @param \think\Request $request
 	 * @throws \Exception
 	 */
-	public function render($request, Throwable $e): Response
+	public function render($request, Throwable $e): \think\Response
 	{
 		// 其他错误交给系统处理
+		// dd($e);
+		if ($e instanceof RouteNotFoundException) {
+			return Response::fail('非法请求！', 400);
+		}
 		if ($e instanceof \Exception && ! $e instanceof ApiException && ! $e instanceof JWTException) {
 			$e = new FailedException($e->getMessage(), 10005, $e);
 		}

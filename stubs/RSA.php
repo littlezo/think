@@ -31,73 +31,53 @@ class RSA
 	/**
 	 * 生成秘钥.
 	 */
-	public static function getSecretKey()
+	public static function getPrivKey(string $alg = 'sha512', int $bits = 4096)
 	{
 		$config = [
-			'digest_alg' => 'sha512',
-			'private_key_bits' => 4096,
+			'digest_alg' => $alg,
+			'private_key_bits' => $bits,
 			'private_key_type' => OPENSSL_KEYTYPE_RSA,
 		];
-
 		$resources = openssl_pkey_new($config);
 		openssl_pkey_export($resources, $private_key, null, $config);
 		$public_key = openssl_pkey_get_details($resources);
 
 		if (empty($private_key) || empty($public_key)) {
-			return error(-1, 'API_SECRET_KEY_CREATE_ERROR');
+			new Exception('API_SECRET_KEY_CREATE_ERROR', 900980);
 		}
-
 		$data = [
 			'public_key' => $public_key['key'],
 			'private_key' => $private_key,
 		];
 
-		return success(0, '', $data);
+		return $data;
 	}
 
-	/**
-	 * 私钥解密.
-	 * @param string $encrypted
-	 * @param string $private_key
-	 * @param mixed $public_key
-	 */
-	public static function decrypt($encrypted, $private_key, $public_key)
+	public static function genCert($user_id, $priv_key_passwd)
 	{
-		$private_check = openssl_pkey_get_private($private_key);
-		if (! $private_check) {
-			return error(-1, 'PRIVATE_KEY_ERROR');
-		}
-		$public_check = openssl_pkey_get_public($public_key);
-		if (! $public_check) {
-			return error(-1, 'PUBLIC_KEY_ERROR');
-		}
-
-		$details = openssl_pkey_get_details($public_check);
-		$bits = $details['bits'];
-
-		$decrypted = '';
-		$base64_decoded = self::safe_base64_decode($encrypted);
-		// 分段解密
-		$parts = str_split($base64_decoded, ($bits / 8));
-		foreach ($parts as $part) {
-			$decrypted_temp = '';
-			$decrypt_res = openssl_private_decrypt($part, $decrypted_temp, $private_key);
-			if (! $decrypt_res) {
-				return error(-1, 'DECRYPT_FAIL');
-			}
-			$decrypted .= $decrypted_temp;
-		}
-
-		return success(0, '', $decrypted);
-	}
-
-	/**
-	 * base64解码
-	 * @param unknown $string
-	 */
-	private static function safe_base64_decode($string)
-	{
-		$base_64 = str_replace(['-', '_'], ['+', '/'], $string);
-		return base64_decode($base_64, true);
+		// 组织
+		$dn = [
+			'countryName' => '中国',
+			'stateOrProvinceName' => '贵州',
+			'localityName' => '贵阳',
+			'organizationName' => '莘悦科技',
+			'organizationalUnitName' => '莘悦科技',
+			'commonName' => 'stye.cn',
+			'emailAddress' => 'littlezov@qq.com',
+		];
+		// 密码  有效期
+		$priv_key_days = 365;
+		$priv_key = self::getPrivKey();
+		$csr = openssl_csr_new($dn, $priv_key);
+		$secret = openssl_csr_sign($csr, null, $priv_key, $priv_key_days);
+		openssl_x509_export($secret, $publickey);
+		openssl_pkey_export($priv_key, $privatekey, $priv_key_passwd);
+		openssl_csr_export($csr, $csrStr);
+		$fp = fopen("../cert/private/$user_id.key", 'w');
+		fwrite($fp, $privatekey);
+		fclose($fp);
+		$fp = fopen("../cert/public/$user_id.crt", 'w');
+		fwrite($fp, $publickey);
+		fclose($fp);
 	}
 }

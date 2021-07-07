@@ -49,7 +49,7 @@ class Service extends \think\Service
 		$this->loadModuleRoute();
 		$this->registerServices();
 		$this->registerEnabledModules();
-		// dd($this->app->config->get());
+		// dd($this->app->get('event'));
 	}
 
 	protected function registerCommands(): void

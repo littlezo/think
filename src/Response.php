@@ -33,9 +33,10 @@ class Response
 	{
 		return json([
 			'code' => $code,
-			'message' => $msg,
+			'type' => 'success',
 			'timestamp' => time(),
-			'data' => $data,
+			'result' => $data,
+			'message' => $msg,
 		]);
 	}
 
@@ -50,8 +51,10 @@ class Response
 	{
 		return json([
 			'code' => $code,
+			'type' => 'success',
+			'timestamp' => time(),
+			'result' => $data,
 			'message' => $msg,
-			'data' => $data,
 		]);
 	}
 
@@ -68,14 +71,20 @@ class Response
 			return json([
 				'code' => Code::SUCCESS,
 				'message' => 'success',
-				'total' => $list->total(),
-				'page' => $list->currentPage(),
-				'size' => $list->listRows(),
-				'data' => $list->getCollection(),
+				'timestamp' => time(),
+				'type' => 'success',
+				'result' => [
+					'total' => $list->total(),
+					'page' => $list->currentPage(),
+					'size' => $list->listRows(),
+					'items' => $list->getCollection(),
+				],
 			]);
 		}
 		$list['code'] = Code::SUCCESS;
 		$list['message'] = 'success';
+		$list['type'] = 'success';
+		$list['timestamp'] = time();
 		return json($list);
 	}
 
@@ -90,6 +99,9 @@ class Response
 		return json([
 			'code' => $code,
 			'message' => $msg,
+			'type' => 'error',
+			'result' => '',
+			'timestamp' => time(),
 		]);
 	}
 }

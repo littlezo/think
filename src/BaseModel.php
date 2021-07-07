@@ -17,8 +17,9 @@ declare(strict_types=1);
 
 namespace littler;
 
-use littler\traits\db\BaseOptionsTrait;
-use littler\traits\db\RewriteTrait;
+use littler\traits\BaseOptionsTrait;
+use littler\traits\RewriteTrait;
+use littler\traits\WithTrait;
 
 /**
  * @mixin Query
@@ -28,6 +29,7 @@ abstract class BaseModel extends \think\Model
 {
 	use BaseOptionsTrait;
 	use RewriteTrait;
+	use WithTrait;
 
 	protected $createTime = 'create_time';
 
@@ -38,6 +40,15 @@ abstract class BaseModel extends \think\Model
 	protected $defaultSoftDelete = 0;
 
 	protected $autoWriteTimestamp = true;
+
+	public function __construct(array $data = [])
+	{
+		parent::__construct($data);
+
+		if (method_exists($this, 'autoWithRelation')) {
+			$this->autoWithRelation();
+		}
+	}
 
 	/**
 	 * 是否有 field.

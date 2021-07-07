@@ -115,8 +115,8 @@ class Service extends Factory
 		$method =$class->addMethod('save')
 			->addComment('#title 保存')
 			->addComment('@param array $args 待写入数据')
-			->addComment('@return bool')
-			->setReturnType('bool')
+			->addComment('@return int')
+			->setReturnType('int')
 			->setReturnNullable()
 			->setBody('return $this->model->storeBy($args);');
 		$method->addParameter('args')

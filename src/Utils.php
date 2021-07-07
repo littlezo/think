@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace littler;
 
 use little\system\model\Config;
+use think\facade\Cache;
 use think\facade\Db;
 use think\helper\Str;
 
@@ -278,5 +279,25 @@ class Utils
 				], 'filesystem');
 			}
 		}
+	}
+
+	/**
+	 * 缓存操作.
+	 *
+	 * @time 2021年06月18日
+	 * @return mixed
+	 *@throws \Psr\SimpleCache\InvalidArgumentException
+	 */
+	public static function cache(string $key, \Closure $callable, int $ttl = 0, string $store = 'redis')
+	{
+		if (Cache::store($store)->has($key)) {
+			return Cache::store($store)->get($store);
+		}
+
+		$cache = $callable();
+
+		Cache::store($store)->set($key, $cache, $ttl);
+
+		return $cache;
 	}
 }

@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\traits\db;
+namespace littler\traits;
 
 use littler\ModelCollection;
 use think\Collection;

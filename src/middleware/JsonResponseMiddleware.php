@@ -24,6 +24,7 @@ class JsonResponseMiddleware extends Middleware
 {
 	public function handle(Request $request, \Closure $next)
 	{
+		// dd($next);
 		$server = $request->server();
 		$server['HTTP_ACCEPT'] = 'application/json';
 		$request->withServer($server);

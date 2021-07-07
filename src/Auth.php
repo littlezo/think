@@ -21,6 +21,8 @@ use littler\exceptions\FailedException;
 use littler\exceptions\LoginFailedException;
 use xiaodi\JWTAuth\Facade\Jwt;
 
+// Todo：废弃 下个版本移除
+
 class Auth
 {
 	/**

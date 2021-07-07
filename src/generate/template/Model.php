@@ -52,7 +52,7 @@ class Model
 				TMP;
 		}
 		return <<<'TMP'
-			use littler\traits\db\BaseOptionsTrait;
+			use littler\traits\BaseOptionsTrait;
 
 
 			TMP;

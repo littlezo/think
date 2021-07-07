@@ -81,11 +81,39 @@ class BatchGenerator
 					'ignore' => [],
 				];
 			}
+			if (! isset($generate_items[$module]['info']['module'])) {
+				$generate_items[$module]['info'] = [
+					'title' => $title[0]['TABLE_COMMENT'] ?: $name,
+					'namespace' => $namespace,
+					'module' => $module,
+					'layer' => $layer,
+					'auth' => $auth,
+					'ignore' => [],
+				];
+			}
 			$generate_items[$module]['generate'][] = [
 				'model' => sprintf('%s\\%s\\model\\%s', $namespace, $module, $name),
-				'model_repository' =>  sprintf('%s\\%s\\repository\\model\\%sAbstract', $namespace, $module, $name),
-				'controller' => sprintf('%s\\%s\\%s\\controller\\%s', $namespace, $module, $layer, isset($table_info[1]) ? $name : 'Index'),
-				'controller_repository' => sprintf('%s\\%s\\repository\\%s\\%sTrait', $namespace, $module, $layer, $name),
+				'model_repository' =>  sprintf(
+					'%s\\%s\\repository\\model\\%sAbstract',
+					$namespace,
+					$module,
+					$name
+				),
+				'controller' => sprintf(
+					'%s\\%s\\%s\\controller\\%s',
+					$namespace,
+					$module,
+					$layer,
+					str_replace(Str::studly($table_info[0]), '', $name) ?: Str::studly($table_info[0])
+				// isset($table_info[1]) ? $name : 'Index'
+				),
+				'controller_repository' => sprintf(
+					'%s\\%s\\repository\\%s\\%sTrait',
+					$namespace,
+					$module,
+					$layer,
+					str_replace(Str::studly($table_info[0]), '', $name) ?: Str::studly($table_info[0])
+				),
 				'event' =>  sprintf('%s\\%s\\event\\%s', $namespace, $module, $name),
 				'service' =>  sprintf('%s\\%s\\service\\%s\\%sService', $namespace, $module, $layer, $name),
 				'table' => Str::snake($name),
@@ -100,23 +128,39 @@ class BatchGenerator
 				],
 			];
 		}
+		// dd($generate_items);
 		foreach ($generate_items as $item) {
 			$module_info = App::getModuleInfo($item['info']['module']);
-			$module_ignore = $module_info['ignore'] ?? false;
-			if (! $module_ignore) {
+			$module_ignore = $module_info['ignore']??null;
+			if (! isset($module_info['name'])) {
 				(new Module())->done($item['info']);
 				$module_ignore = $item['info']['ignore'];
 			}
+			if (isset($module_info['dev_mode'])&&! $module_info['dev_mode']) {
+				continue;
+			}
+			// var_dump(isset($module_info['dev_mode'])&&! $module_info['dev_mode']);
 			foreach ($item['generate'] as $generate) {
 				// if ($generate['table'] =='goods') {
-				// 	dd($module_ignore);
+				// dd((array) $module_ignore);
 				// }
+				// dd($generate);
+
+				if ($generate['extra']['module'] == 'user') {
+					// dd($generate);
+				}
+				// dd();
+				// dd($generate);
+				$generate['module'] = App::getModuleInfo($item['info']['module']);
 				if (! in_array($generate['table'], (array) $module_ignore, true)) {
+					// dd($generate);
+					// continue;
 					$message[] = $this->execute($generate);
 				} else {
 					$generate['controller']=null;
 					$generate['controller_repository']=null;
 					// dd($generate);
+
 					$message[] = $this->execute($generate);
 				}
 			}
@@ -126,6 +170,7 @@ class BatchGenerator
 
 	protected function execute($params)
 	{
+		// dd($params);
 		$message = [];
 		$files = [];
 		try {
@@ -154,7 +199,7 @@ class BatchGenerator
 			// }
 			return 'success';
 		} catch (\Throwable $exception) {
-			throw new FailedException((string) $exception->getMessage());
+			throw new FailedException((string) $exception->getTraceAsString());
 		}
 
 		return $message;

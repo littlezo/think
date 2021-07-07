@@ -280,17 +280,16 @@ class Query extends \think\db\Query
 	 * @param string $order
 	 * @return $this
 	 */
-	public function lzOrder($order = 'desc')
+	public function lzOrder(array $order_map = [])
 	{
-		if (in_array('sort', array_keys($this->getFields()), true)) {
-			$this->order($this->getTable() . '.sort', $order);
-		}
+		$sort = \request()->param('sort') ?: $this->getAutoPk();
+		$order = \request()->param('order') ?: 'desc';
 
-		if (in_array('weight', array_keys($this->getFields()), true)) {
-			$this->order($this->getTable() . '.weight', $order);
+		if (is_array($order_map)&&! empty($order_map)) {
+			$this->order($order_map);
+		} else {
+			$this->order($sort, $order);
 		}
-		// dd($this->getAutoPk());
-		$this->order($this->getTable() . '.' . $this->getAutoPk(), $order);
 
 		return $this;
 	}
@@ -335,6 +334,7 @@ class Query extends \think\db\Query
 
 	public function getAutoPk()
 	{
-		return $this->connection->getPk($this->getTable());
+		return $this->getPk($this->getTable());
+		// $this->connection->getPk($this->getTable());
 	}
 }

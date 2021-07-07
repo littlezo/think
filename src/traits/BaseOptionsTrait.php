@@ -15,7 +15,7 @@ declare(strict_types=1);
  *
  */
 
-namespace littler\traits\db;
+namespace littler\traits;
 
 use littler\library\excel\reader\Reader;
 use littler\Utils;
@@ -116,7 +116,8 @@ trait BaseOptionsTrait
 	 */
 	public function deleteBy($id, $force = false)
 	{
-		return static::destroy(is_array($id) ? $id : Utils::stringToArrayBy($id), $force);
+		// dd(Utils::stringToArrayBy((string) $id));
+		return static::destroy(is_array($id) ? $id : Utils::stringToArrayBy((string) $id), $force);
 	}
 
 	/**
@@ -197,15 +198,16 @@ trait BaseOptionsTrait
 	 * @param $field
 	 * @return array|string
 	 */
-	public function aliasField($field)
+	public function aliasField($field, $table='')
 	{
+		$table = $table ? Utils::tableWithPrefix($table) : $this->getTable();
 		if (is_string($field)) {
-			return sprintf('%s.%s', $this->getTable(), $field);
+			return sprintf('%s.%s', $table, $field);
 		}
 
 		if (is_array($field)) {
 			foreach ($field as &$value) {
-				$value = sprintf('%s.%s', $this->getTable(), $value);
+				$value = sprintf('%s.%s', $table, $value);
 			}
 
 			return $field;

@@ -55,10 +55,10 @@ class Poster
 
 	/**
 	 * 创建透明色.
-	 * @param unknown $red
-	 * @param unknown $green
-	 * @param unknown $blue
-	 * @param unknown $alpha 0不透明  127完全透明
+	 * @param int $red
+	 * @param int $green
+	 * @param int $blue
+	 * @param int $alpha 0不透明  127完全透明
 	 */
 	public function createAlphaColor($red, $green, $blue, $alpha)
 	{
@@ -67,11 +67,11 @@ class Poster
 
 	/**
 	 * 将图片写入海报.
-	 * @param unknown $image_path
-	 * @param unknown $x
-	 * @param unknown $y
-	 * @param unknown $width
-	 * @param unknown $height
+	 * @param string $image_path
+	 * @param int $x
+	 * @param int $y
+	 * @param int $width
+	 * @param int $height
 	 */
 	public function imageCopy($image_path, $x, $y, $width, $height, int $radius = 0)
 	{
@@ -160,9 +160,9 @@ class Poster
 
 	/**
 	 * 创建颜色.
-	 * @param unknown $red
-	 * @param unknown $green
-	 * @param unknown $blue
+	 * @param int $red
+	 * @param int $green
+	 * @param int $blue
 	 * @return number
 	 */
 	private function createColor($red, $green, $blue)
