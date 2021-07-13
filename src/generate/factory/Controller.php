@@ -175,7 +175,7 @@ class Controller extends Factory
 			->addComment('@var ' . $namespace->unresolveName($use));
 		$method = $class->addMethod('index')
 			->addComment(sprintf('@Route("/%s", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '分页列表', 'delete', $this->pageParam)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '分页列表', 'index', $this->pageParam)))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -184,7 +184,7 @@ class Controller extends Factory
 			->setType(Request::class);
 		$method = $class->addMethod('info')
 			->addComment(sprintf('@Route("/%s/:id", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '详情', 'delete', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '详情', 'info', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -195,7 +195,7 @@ class Controller extends Factory
 			->setType('int');
 		$method = $class->addMethod('save')
 			->addComment(sprintf('@Route("/%s", method="POST", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '保存', 'delete', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '保存', 'save', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -204,7 +204,7 @@ class Controller extends Factory
 			->setType(Request::class);
 		$method = $class->addMethod('update')
 			->addComment(sprintf('@Route("/%s/:id", method="PUT", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '更新', 'delete', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '更新', 'update', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()

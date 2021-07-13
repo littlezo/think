@@ -14,5 +14,6 @@
 	"author": "@小小只^v^",
 	"content": "",
 	"version_no": "{VERSION_NO}",
-  "ignore": [{IGNORE}]
+    "ignore": [{IGNORE}],
+    "allow_layer": ["admin"]
 }

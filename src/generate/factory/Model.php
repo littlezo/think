@@ -24,6 +24,7 @@ use littler\facade\FileSystem;
 use littler\traits\BaseOptionsTrait;
 use littler\traits\RewriteTrait;
 use littler\Utils;
+use Nette\PhpGenerator\Dumper;
 use Nette\PhpGenerator\PhpFile;
 use think\facade\Db;
 use think\helper\Str;
@@ -55,11 +56,20 @@ class Model extends Factory
 		$repositoryFile = $this->getGeneratePath($params['model_repository']);
 		FileSystem::put($repositoryFile, $repository);
 		$content = $this->getContent($params);
-		$contentPath = $this->getGeneratePath($params['model']);
-		if (! file_exists($contentPath)) {
-			FileSystem::put($contentPath, $content);
+		$path = $this->getGeneratePath($params['model']);
+		if (! file_exists($path)) {
+			FileSystem::put($path, $content);
 		}
-		return $contentPath;
+		if (file_exists($path)) {
+			[$className] = $this->parseFilename($params['model']);
+			$model_key = 'model.' . $params['extra']['module'] . '.' . $className;
+			$model_map = include $this->getModulePath($params['model']) . 'config/modelMap.php';
+			$model = array_merge($model_map, [$model_key=>$params['model']]);
+			$dumper = new Dumper();
+			$model_content = sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump($model));
+			FileSystem::put($this->getModulePath($params['model']) . 'config/modelMap.php', $model_content);
+		}
+		return $path;
 	}
 
 	/**

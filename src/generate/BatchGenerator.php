@@ -44,6 +44,7 @@ class BatchGenerator
 	 */
 	public function done($namespace, $layer, $auth)
 	{
+		// dd($event_content);
 		$message = [];
 		// 判断是否安装了扩展包
 		if (! (new Composer())->hasPackage(self::NEED_PACKAGE)) {
@@ -91,31 +92,38 @@ class BatchGenerator
 					'ignore' => [],
 				];
 			}
+			$pos = strpos($table, $module . '_');
+			// dd($pos);
+			$class =$table;
+			if ($pos!==false) {
+				$class = substr($table, strlen($module . '_'));
+			}
+			// var_dump($pos, $class);
+			// continue;
 			$generate_items[$module]['generate'][] = [
-				'model' => sprintf('%s\\%s\\model\\%s', $namespace, $module, $name),
+				'model' => sprintf('%s\\%s\\model\\%s', $namespace, $module, Str::studly($class)),
 				'model_repository' =>  sprintf(
 					'%s\\%s\\repository\\model\\%sAbstract',
 					$namespace,
 					$module,
-					$name
+					Str::studly($class)
 				),
 				'controller' => sprintf(
 					'%s\\%s\\%s\\controller\\%s',
 					$namespace,
 					$module,
 					$layer,
-					str_replace(Str::studly($table_info[0]), '', $name) ?: Str::studly($table_info[0])
-				// isset($table_info[1]) ? $name : 'Index'
+					Str::studly($class)
 				),
 				'controller_repository' => sprintf(
 					'%s\\%s\\repository\\%s\\%sTrait',
 					$namespace,
 					$module,
 					$layer,
-					str_replace(Str::studly($table_info[0]), '', $name) ?: Str::studly($table_info[0])
+					Str::studly($class)
 				),
-				'event' =>  sprintf('%s\\%s\\event\\%s', $namespace, $module, $name),
-				'service' =>  sprintf('%s\\%s\\service\\%s\\%sService', $namespace, $module, $layer, $name),
+				'event' =>  sprintf('%s\\%s\\event\\%s', $namespace, $module, Str::studly($class)),
+				'service' =>  sprintf('%s\\%s\\service\\%s\\%sService', $namespace, $module, $layer, Str::studly($class)),
 				'table' => Str::snake($name),
 				'extra' => [
 					'soft_delete' => true,
@@ -127,11 +135,15 @@ class BatchGenerator
 					'auth' => $auth,
 				],
 			];
+			// dd($generate_items);
 		}
-		// dd($generate_items);
 		foreach ($generate_items as $item) {
+			if ($item['info']['module'] !== 'user') {
+				// continue; // debug
+			}
 			$module_info = App::getModuleInfo($item['info']['module']);
 			$module_ignore = $module_info['ignore']??null;
+
 			if (! isset($module_info['name'])) {
 				(new Module())->done($item['info']);
 				$module_ignore = $item['info']['ignore'];
@@ -141,14 +153,13 @@ class BatchGenerator
 			}
 			// var_dump(isset($module_info['dev_mode'])&&! $module_info['dev_mode']);
 			foreach ($item['generate'] as $generate) {
+				if (isset($module_info['allow_layer'])&&! in_array($generate['extra']['layer'], (array) $module_info['allow_layer'], true)) {
+					continue;
+				}
 				// if ($generate['table'] =='goods') {
 				// dd((array) $module_ignore);
 				// }
 				// dd($generate);
-
-				if ($generate['extra']['module'] == 'user') {
-					// dd($generate);
-				}
 				// dd();
 				// dd($generate);
 				$generate['module'] = App::getModuleInfo($item['info']['module']);
@@ -160,7 +171,6 @@ class BatchGenerator
 					$generate['controller']=null;
 					$generate['controller_repository']=null;
 					// dd($generate);
-
 					$message[] = $this->execute($generate);
 				}
 			}
@@ -188,7 +198,7 @@ class BatchGenerator
 				array_push($message, 'controller created successfully');
 			}
 			if ($params['event']) {
-				(new Event())->done($params);
+				// (new Event())->done($params);
 				// array_push($message, 'event created successfully');
 			}
 			// if ($params['controller']) {

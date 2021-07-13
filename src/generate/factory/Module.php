@@ -173,6 +173,8 @@ class Module
 		$this->createConfig();
 		$this->createEvent();
 		$this->createModuleJson();
+		$this->createModelMap();
+		$this->createServiceMap();
 	}
 
 	/**
@@ -248,5 +250,23 @@ class Module
 	protected function createRoute()
 	{
 		FileSystem::put($this->moduleDir . 'route.php', FileSystem::sharedGet($this->stubDir . 'route.stub'));
+	}
+
+	/**
+	 * 创建路由文件.
+	 */
+	protected function createModelMap()
+	{
+		$dumper = new Dumper();
+		FileSystem::put($this->moduleDir . 'config/modelMap.php', sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump([])));
+	}
+
+	/**
+	 * 创建路由文件.
+	 */
+	protected function createServiceMap()
+	{
+		$dumper = new Dumper();
+		FileSystem::put($this->moduleDir . 'config/serviceMap.php', sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump([])));
 	}
 }

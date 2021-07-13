@@ -20,6 +20,7 @@ namespace littler;
 use littler\event\LoadModuleRoutes;
 use littler\middleware\AllowCrossDomain;
 use littler\middleware\JsonResponseMiddleware;
+use littler\websocket\Handler;
 use think\exception\Handle;
 use think\facade\Validate;
 
@@ -131,6 +132,7 @@ class Service extends \think\Service
 	protected function registerExceptionHandle(): void
 	{
 		$this->app->bind(Handle::class, ExceptionHandle::class);
+		// $this->app->bind(think\swoole\websocket\socketio\Handler::class, Handler::class);
 	}
 
 	/**

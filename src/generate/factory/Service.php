@@ -21,6 +21,7 @@ use littler\annotation\Inject;
 use littler\exceptions\FailedException;
 use littler\facade\FileSystem;
 use littler\Request;
+use Nette\PhpGenerator\Dumper;
 use Nette\PhpGenerator\PhpFile;
 
 class Service extends Factory
@@ -33,10 +34,20 @@ class Service extends Factory
 	 */
 	public function done(array $params)
 	{
+		// dd($params);
 		$path = $this->getGeneratePath($params['service']);
 		try {
 			if (! file_exists($path)) {
 				FileSystem::put($path, $this->getContent($params));
+			}
+			if (file_exists($path)) {
+				[$className] = $this->parseFilename($params['service']);
+				$model_key = 'service.' . $params['extra']['module'] . '.' . $className;
+				$service_map = include $this->getModulePath($params['service']) . 'config/serviceMap.php';
+				$service = array_merge($service_map, [$model_key=>$params['service']]);
+				$dumper = new Dumper();
+				$service_content = sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump($service));
+				FileSystem::put($this->getModulePath($params['service']) . 'config/serviceMap.php', $service_content);
 			}
 			return $path;
 		} catch (\Throwable $exception) {

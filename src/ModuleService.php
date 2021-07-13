@@ -34,11 +34,23 @@ abstract class ModuleService extends Service
 	abstract public function loadCommands();
 
 	/**
+	 *注册模型.
+	 */
+	abstract public function loadModel();
+
+	/**
+	 * 注册服务
+	 */
+	abstract public function loadService();
+
+	/**
 	 * 注册.
 	 */
 	public function register()
 	{
 		$this->registerModule();
+		$this->registerModel();
+		$this->registerService();
 		$this->registerModuleRoute();
 		$this->registerEvents();
 		$this->registerMiddleWares();
@@ -47,11 +59,35 @@ abstract class ModuleService extends Service
 	}
 
 	/**
+	 * 模块模型.
+	 */
+	protected function registerModel()
+	{
+		if (method_exists($this, 'loadModel') && ! is_null($this->loadModel())) {
+			foreach ($this->loadModel() as $key => $item) {
+				$this->app->bind($key, $item);
+			}
+		}
+	}
+
+	/**
+	 * 模块模块服务.
+	 */
+	protected function registerService()
+	{
+		if (method_exists($this, 'loadService') && ! is_null($this->loadService())) {
+			foreach ($this->loadService() as $key => $item) {
+				$this->app->bind($key, $item);
+			}
+		}
+	}
+
+	/**
 	 * 模块注册.
 	 */
 	protected function registerModule()
 	{
-		$model[] = $this->loadModule();
+		// $model[] = $this->loadModule();
 		if (method_exists($this, 'loadModule') && ! is_null($this->loadModule())) {
 			$this->app->make('loadModule')->loadModule($this->loadModule());
 		}
@@ -62,7 +98,7 @@ abstract class ModuleService extends Service
 	 */
 	protected function registerModuleRoute()
 	{
-		$model[] = $this->loadModuleRoute();
+		// $model[] = $this->loadModuleRoute();
 		if (method_exists($this, 'loadModuleRoute') && ! is_null($this->loadModuleRoute())) {
 			// dd($this->loadModuleRoute());
 			$this->app->make('moduleRoute')->loadModuleRoute($this->loadModuleRoute());
@@ -84,6 +120,9 @@ abstract class ModuleService extends Service
 		}
 	}
 
+	/**
+	 * 注册中间件.
+	 */
 	protected function registerMiddleWares()
 	{
 		if (method_exists($this, 'loadMiddleware') && ! is_null($this->loadMiddleware())) {
