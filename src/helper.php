@@ -558,6 +558,54 @@ function event($event, $args = [], $once = false)
 }
 
 /**
+ * 实例化模型.
+ * @param string $model 模型名称
+ * @param bool $break 是否打断调用 打断将 抛出异常
+ * @return array|mixed|string｜object
+ */
+function model($model, $break = false)
+{
+	try {
+		return app('model.' . $model);
+	} catch (\Throwable $e) {
+		if ($break) {
+			throw new Exception($e->getMessage(), $e->getCode(), $e);
+		}
+		return null;
+	}
+}
+
+/**
+ * 实例化服务.
+ * @param string $service 事件名称
+ * @param bool $break 是否打断调用 打断将 抛出异常
+ * @return array|mixed|string｜object
+ */
+function service($service, $suffix = 'Service', $break = false)
+{
+	try {
+		if ($suffix) {
+			return app('service.' . $service . $suffix);
+		}
+		return app('service.' . $service);
+	} catch (\Throwable $e) {
+		if ($break) {
+			throw new Exception($e->getMessage(), $e->getCode(), $e);
+		}
+		return null;
+	}
+}
+
+/**
+ * 删除空格 换行符  回车.
+ */
+function trim_all($str)
+{
+	$RegExp=[' ', '　', "\t", "\n", "\r"];
+	return str_replace($RegExp, '', $str);
+}
+
+/**
  * 错误返回值函数.
  * @param int $code
  * @param string $message
