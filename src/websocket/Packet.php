@@ -168,7 +168,7 @@ class Packet
 			throw new Exception('数据包格式不合法');
 		}
 		$type = substr($packet, 0, 2) ?? null;
-		$protocol = substr($packet, 2, 4) ?? null;
+		$protocol = substr($packet, 2, 2) ?? null;
 
 		$pack_length = substr($packet, 4, 8) ?? null;
 

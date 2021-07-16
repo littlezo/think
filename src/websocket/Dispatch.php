@@ -44,6 +44,7 @@ class Dispatch
 			if (! $this->service||! $this->target) {
 				throw new Exception('服务或调度调度目标不存在，无法完成调度。请检查格式是否正确，如格式无误，请联系后端查看是否注册服务', 9400500);
 			}
+
 			if (is_array($this->argv)) {
 				return $this->service->{$this->target}(...$this->argv);
 			}

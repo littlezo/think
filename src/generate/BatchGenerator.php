@@ -42,7 +42,7 @@ class BatchGenerator
 	 * @throws \think\db\exception\ModelNotFoundException
 	 * @throws \think\db\exception\DataNotFoundException
 	 */
-	public function done($namespace, $layer, $auth)
+	public function done($namespace, $layer, $auth, $is_layout)
 	{
 		// dd($event_content);
 		$message = [];
@@ -133,6 +133,7 @@ class BatchGenerator
 					'module' => $module,
 					'layer' => $layer,
 					'auth' => $auth,
+					'is_layout'=>$is_layout,
 				],
 			];
 			// dd($generate_items);

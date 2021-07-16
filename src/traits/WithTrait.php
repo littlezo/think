@@ -26,6 +26,8 @@ trait WithTrait
 	 */
 	public function scopeWithRelation($query)
 	{
+		// dd(property_exists($this, 'with'));
+
 		if (property_exists($this, 'with') && ! empty($this->with)) {
 			$query->with($this->with);
 		}

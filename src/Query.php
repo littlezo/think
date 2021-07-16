@@ -83,24 +83,24 @@ class Query extends \think\db\Query
 				$field[] = $this->model->getDeleteAtField();
 			}
 		}
-
 		// 字段排除
 		$fields = $this->getTableFields();
 		$field = $fields ? array_diff($fields, $field) : $field;
-		// dd($field);
 
 		if (isset($this->options['field'])) {
 			$field = array_merge((array) $this->options['field'], $field);
 		}
 
 		$this->options['field'] = array_unique($field);
-
+		// unset($field[0]);
 		if ($needAlias) {
 			$alias = $this->getAlias();
 			$this->options['field'] = array_map(function ($field) use ($alias) {
 				return $alias . '.' . $field;
 			}, $this->options['field']);
 		}
+
+		// dd($field);
 
 		return $this;
 	}
@@ -282,7 +282,7 @@ class Query extends \think\db\Query
 	 */
 	public function lzOrder(array $order_map = [])
 	{
-		$sort = \request()->param('sort') ?: $this->getAutoPk();
+		$sort = (\request()->param('sort') ?: \request()->param('field')) ?: $this->getAutoPk();
 		$order = \request()->param('order') ?: 'desc';
 
 		if (is_array($order_map)&&! empty($order_map)) {
@@ -290,6 +290,7 @@ class Query extends \think\db\Query
 		} else {
 			$this->order($sort, $order);
 		}
+		// dd($sort);
 
 		return $this;
 	}

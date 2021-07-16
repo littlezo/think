@@ -42,14 +42,16 @@ trait BaseOptionsTrait
 		// 不分页
 		if ($paginate) {
 			return $this->quickSearch()
-				->field('*')
+				// ->field(true)
 				->lzOrder()
+				->withoutField($this->without)
 				->paginate();
 		}
 		// 分页列表
 		return $this->quickSearch()
-			->field('*')
+			// ->field(true)
 			->lzOrder()
+			->withoutField($this->without)
 			->select();
 	}
 
@@ -59,6 +61,7 @@ trait BaseOptionsTrait
 	public function storeBy(array $data)
 	{
 		if ($this->allowField($this->field)->save($this->filterData($data))) {
+			// dd($this);
 			return (int) $this->{$this->getAutoPk()};
 		}
 
@@ -106,7 +109,7 @@ trait BaseOptionsTrait
 			return static::onlyTrashed()->find($id);
 		}
 
-		return static::where($this->getAutoPk(), $id)->field($field)->find();
+		return static::where($this->getAutoPk(), $id)->field($field)->withoutField($this->without)->find();
 	}
 
 	/**

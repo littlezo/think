@@ -126,6 +126,7 @@ class Controller extends Factory
 				throw new FailedException($params['controller_repository'] . ' generate failed~');
 			}
 			if (! file_exists($contentPath)) {
+				// if ($params['table'] !== 'user_account') {
 				FileSystem::put($contentPath, $content);
 			}
 			return $contentPath;
@@ -149,6 +150,7 @@ class Controller extends Factory
 		[$classNameRoute] = $this->parseFilename($params['controller']);
 		[$className, $classNamespace] = $this->parseFilename($params['controller_repository']);
 		$use = $params['service'];
+		$is_layout = $params['extra']['is_layout'];
 
 		if (! $className) {
 			throw new FailedException('未填写控制器名称');
@@ -173,6 +175,17 @@ class Controller extends Factory
 			->setProtected()
 			->addComment('@Inject()')
 			->addComment('@var ' . $namespace->unresolveName($use));
+		if ($is_layout) {
+			$method = $class->addMethod('layout')
+				->addComment(sprintf('@Route("/%s/layout", method="GET", ignore_verify=false)', Str::snake($className)))
+				->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '页面布局', 'layout', $this->pageParam)))
+				->addComment('@return \think\Response')
+				->setReturnType('think\Response')
+				->setReturnNullable()
+				->setBody('return Response::success($this->service->layout($request->param("type")));');
+			$method->addParameter('request')
+				->setType(Request::class);
+		}
 		$method = $class->addMethod('index')
 			->addComment(sprintf('@Route("/%s", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
 			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '分页列表', 'index', $this->pageParam)))
@@ -276,7 +289,6 @@ class Controller extends Factory
 			->addComment(sprintf('@package %s', $classNamespace))
 			->addComment(sprintf('@RouteGroup("%s")', $params['extra']['layer'] . '/' . $params['extra']['module']))
 			// ->addComment(sprintf('@Resource("%s")', $className=='Index' ? $params['extra']['module'] . '/index' : $params['extra']['module']))
-
 			->addComment(sprintf('@Middleware({littler\JWTAuth\Middleware\Jwt::class,"%s"})', $params['extra']['auth']))
 			->addComment(sprintf('@apiDocs({%s})', sprintf(
 				$this->classDocs,

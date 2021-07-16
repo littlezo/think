@@ -58,17 +58,19 @@ class Model extends Factory
 		$content = $this->getContent($params);
 		$path = $this->getGeneratePath($params['model']);
 		if (! file_exists($path)) {
+			// dd($params['table']);
+			// if ($params['table'] !== 'user_account') {
 			FileSystem::put($path, $content);
 		}
-		if (file_exists($path)) {
-			[$className] = $this->parseFilename($params['model']);
-			$model_key = 'model.' . $params['extra']['module'] . '.' . $className;
-			$model_map = include $this->getModulePath($params['model']) . 'config/modelMap.php';
-			$model = array_merge($model_map, [$model_key=>$params['model']]);
-			$dumper = new Dumper();
-			$model_content = sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump($model));
-			FileSystem::put($this->getModulePath($params['model']) . 'config/modelMap.php', $model_content);
-		}
+		// if (file_exists($path)) {
+		[$className] = $this->parseFilename($params['model']);
+		$model_key = 'model.' . $params['extra']['module'] . '.' . $className;
+		$model_map = include $this->getModulePath($params['model']) . 'config/modelMap.php';
+		$model = array_merge($model_map, [$model_key => $params['model']]);
+		$dumper = new Dumper();
+		$model_content = sprintf('<?php' . PHP_EOL . PHP_EOL . 'return %s;', $dumper->dump($model));
+		FileSystem::put($this->getModulePath($params['model']) . 'config/modelMap.php', $model_content);
+		// }
 		return $path;
 	}
 
@@ -98,7 +100,7 @@ class Model extends Factory
 		$content->addComment($this->header);
 		$namespace = $content->addNamespace($classNamespace);
 		$namespace->addUse(BaseModel::class, 'Model')
-		->addUse(Inject::class)
+			->addUse(Inject::class)
 			->addUse(BaseOptionsTrait::class)
 			->addUse(RewriteTrait::class);
 		$fields_type = Db::name(Utils::tableWithoutPrefix($table))->getFieldsType();
@@ -157,7 +159,7 @@ class Model extends Factory
 			->addComment('')
 			->addComment(PHP_EOL . '@var string $name 表名');
 		$class->addProperty('pk', $pk)
-			->setProtected()
+			->setPublic()
 			->addComment('')
 			->addComment(PHP_EOL . '@var string $pk 主键');
 
@@ -200,6 +202,7 @@ class Model extends Factory
 	public function getContent($params)
 	{
 		$table = Utils::tableWithPrefix($params['table']);
+
 		[$className, $classNamespace] = $this->parseFilename($params['model']);
 		// 如果填写了表名并且没有填写模型名称 使用表名作为模型名称
 		if (! $className && $table) {
@@ -209,16 +212,207 @@ class Model extends Factory
 		if (! $className) {
 			throw new FailedException('model name not set');
 		}
+
 		$repository = $params['model_repository'];
 		$content = new PhpFile();
 		$content->setStrictTypes();
 		$content->addComment($this->header);
 		$namespace = $content->addNamespace($classNamespace);
-		$namespace->addUse($repository)
+
+		$class = $namespace->addUse($repository)
 			->addClass($className)
 			->setExtends($repository)
 			->addComment(PHP_EOL . sprintf('%s 模型', $params['extra']['title']));
-
+		$class->addProperty('with', [])
+			->setPublic()
+			->addComment(PHP_EOL . '@var array 关联预载');
+		$class->addProperty('table_schema', $this->tableSchema($table))
+			->setPublic()
+			->addComment(PHP_EOL . '@var array 列表字段映射');
+		$class->addProperty('search_schema', $this->searchSchema($table))
+			->setPublic()
+			->addComment(PHP_EOL . '@var array 搜索表单字段映射  具体字段规则参见 快速搜索定义 ');
+		$class->addProperty('form_schema', $this->formSchema($table))
+			->setPublic()
+			->addComment(PHP_EOL . '@var array 增加表单字段映射');
+		$class->addProperty('without', ['password', 'passwd', 'pay_passwd', 'pay_password'])
+			->setPublic()
+			->addComment(PHP_EOL . '@var array 排除展示字段');
 		return $content;
+	}
+
+	protected function tableSchema($table)
+	{
+		$fields = Db::getFields($table);
+		$tableSchema = [
+			'columns' => [],
+			'formConfig' => [
+			],
+			'pagination' => true,
+			'striped' => true,
+			'useSearchForm' => true,
+			'showTableSetting' => true,
+			'bordered' => true,
+			'showIndexColumn' => false,
+			'canResize' => true,
+			'rowKey'=>'id',
+			'searchInfo' => ['order' => 'asc'],
+			'actionColumn' => [
+				'width' => 100,
+				'title' => '操作',
+				'dataIndex' => 'action',
+				'slots' => ['customRender' => 'action'],
+				'fixed' => 'right',
+			],
+		];
+		$children = [];
+
+		foreach ($fields as $field) {
+			// dd($fields);
+			$field_type = explode(':', str_replace([' ', '(', ')'], ':', $field['type']));
+			// dd($field_type);
+			$title = ($field['primary'] ? 'ID' : $field['comment']) ?: Str::studly($field['name']);
+			$width = 80;
+			$defaultHidden = true;
+			$customRender = null;
+			$fixed = false;
+			if ($field_type == 'json') {
+				continue;
+			}
+			if (stripos($field['name'], 'delete')) {
+				continue;
+			}
+			if (stripos($field['name'], 'pass')) {
+				// dd($field['name']);
+				continue;
+			}
+
+			if (! $field['primary']) {
+				if (in_array($field_type[0], ['int', 'tinyint', 'smallint', 'mediumint', 'bigint', 'float', 'double', 'decimal'], true)) {
+					if (strpos($field['name'], 'time')) {
+						$width = 120;
+					} else {
+						$width = 100;
+					}
+					$defaultHidden = false;
+				} elseif (in_array($field_type[0], ['char', 'varchar'], true)) {
+					$width = 160;
+					if ($field_type[1] > 16) {
+						$width = 180;
+					}
+					$defaultHidden = false;
+				}
+			} else {
+				$fixed = 'left';
+				$defaultHidden = false;
+				$tableSchema['rowKey']= $field['name'];
+			}
+			if (strpos($field['name'], 'openid')) {
+				$defaultHidden = true;
+			}
+			if (strpos($field['name'], 'unionid')) {
+				$defaultHidden = true;
+			}
+
+			if (strpos($field['name'], 'img')) {
+				$customRender = 'img';
+			}
+			if (strpos($field['name'], 'imgs')) {
+				$customRender = 'imgs';
+			}
+			if (in_array($field['name'], ['avatar', 'headimg'], true)) {
+				$customRender = 'avatar';
+				$width = 150;
+			}
+			$schema = [
+				'title' => $title,
+				'dataIndex' => $field['name'],
+				'width' => $width,
+				'fixed' => $fixed,
+				'align' => 'center',
+				'defaultHidden' => $defaultHidden,
+			];
+			if ($customRender) {
+				$schema['slots'] = ['customRender' => $customRender];
+			}
+			$tableSchema['columns'][] = $schema;
+
+			// if ($defaultHidden == false) {
+			// 	$tableSchema[] =$schema;
+			// } else {
+			// 	$children[] =$schema;
+			// }
+		}
+		// $tableSchema['children'] = $children;
+		return $tableSchema;
+		// dd($tableSchema);
+	}
+
+	protected function searchSchema($table)
+	{
+		$fields = Db::getFields($table);
+		$searchSchema = [
+			'labelWidth' => 100,
+			'schemas' => [],
+		];
+
+		foreach ($fields as $field) {
+			$field_type = explode(':', str_replace([' ', '(', ')'], ':', $field['type']));
+			$title = ($field['primary'] ? 'ID' : $field['comment']) ?: Str::studly($field['name']);
+			if (! $field['primary']) {
+				continue;
+			}
+			$schema = [
+				'field' => $field['name'],
+				'label' => $title,
+				'component' => 'Input',
+				'colProps' => [
+					'lg' => 12,
+					'xl' => 8,
+					'xxl' => 6,
+				],
+			];
+			$searchSchema['schemas'][] = $schema;
+		}
+		return $searchSchema;
+	}
+
+	protected function formSchema($table)
+	{
+		$fields = Db::getFields($table);
+		$formSchema = [
+			'labelWidth' => 120,
+			'schemas' => [],
+		];
+
+		foreach ($fields as $field) {
+			$field_type = explode(':', str_replace([' ', '(', ')'], ':', $field['type']));
+			$title = ($field['primary'] ? 'ID' : $field['comment']) ?: Str::studly($field['name']);
+			if ($field['primary']) {
+				continue;
+			}
+
+			if (strpos($field['name'], 'openid')) {
+				continue;
+			}
+			if (strpos($field['name'], 'unionid')) {
+				continue;
+			}
+
+			$required = $field['notnull'] ?: false;
+			$schema = [
+				'field' => $field['name'],
+				'label' => $title,
+				'component' => 'Input',
+				'required' => $required,
+				'colProps' => [
+					'lg' => 12,
+					'xl' => 8,
+					'xxl' => 6,
+				],
+			];
+			$formSchema['schemas'][] = $schema;
+		}
+		return $formSchema;
 	}
 }
