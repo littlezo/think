@@ -105,7 +105,7 @@ class ModelCollection extends Collection
 		$childIds = $this->whereIn($parentFields, $ids)->column($column);
 
 		if (! empty($childIds)) {
-			$childIds = array_merge($childIds, $this->getAllChildrenIds($childIds));
+			$childIds = array_merge($childIds, $this->getAllChildrenIds($childIds, $parentFields, $column));
 		}
 
 		return $childIds;
