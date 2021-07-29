@@ -20,7 +20,7 @@ namespace littler;
 use think\Paginator;
 use think\response\Json;
 
-class Response
+class Response extends \think\Response
 {
 	/**
 	 * API 成功的响应.
@@ -103,5 +103,23 @@ class Response
 			'result' => '',
 			'timestamp' => time(),
 		]);
+	}
+
+	/**
+	 * 文件响应.
+	 */
+	public static function file($file, string $filename=null, string $mimeType=null, bool $content = false, bool $force =false)
+	{
+		// $content= file_get_contents($file);
+		$response =  Response::create($file, 'file');
+		if ($mimeType) {
+			$response->mimeType($mimeType);
+			$response->contentType($mimeType);
+		}
+		$response->isContent($content);
+		// $response->content($content);
+		$response->name($filename);
+		$response->force($force);
+		return $response;
 	}
 }
