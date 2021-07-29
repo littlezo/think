@@ -34,18 +34,18 @@ class Service extends Factory
 	 */
 	public function done(array $params)
 	{
-		// dd($params);
 		$path = $this->getGeneratePath($params['service']);
-		// echo $this->getContent($params);
-		// dd();
 		try {
 			if (! file_exists($path)) {
-				// if ($params['table'] !== 'user_account') {
 				FileSystem::put($path, $this->getContent($params));
 			}
 			if (file_exists($path)) {
 				[$className] = $this->parseFilename($params['service']);
-				$model_key = 'service.' . $params['extra']['module'] . '.' . $className;
+				if ($params['extra']['layer']=='api') {
+					$model_key = 'service.' . $params['extra']['module'] . '.' . $className;
+				} else {
+					$model_key = 'service.' . $params['extra']['layer'] . '.' . $params['extra']['module'] . '.' . $className;
+				}
 				$service_map = include $this->getModulePath($params['service']) . 'config/serviceMap.php';
 				$service = array_merge($service_map, [$model_key => $params['service']]);
 				$dumper = new Dumper();

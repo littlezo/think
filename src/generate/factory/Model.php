@@ -314,16 +314,16 @@ class Model extends Factory
 				$defaultHidden = true;
 			}
 
-			if (strpos($field['name'], 'img')) {
-				$customRender = 'img';
-			}
-			if (strpos($field['name'], 'imgs')) {
-				$customRender = 'imgs';
-			}
-			if (in_array($field['name'], ['avatar', 'headimg'], true)) {
-				$customRender = 'avatar';
-				$width = 150;
-			}
+			// if (strpos($field['name'], 'img')) {
+			// 	$customRender = 'img';
+			// }
+			// if (strpos($field['name'], 'imgs')) {
+			// 	$customRender = 'imgs';
+			// }
+			// if (in_array($field['name'], ['avatar', 'headimg'], true)) {
+			// 	$customRender = 'avatar';
+			// 	$width = 150;
+			// }
 			$schema = [
 				'title' => $title,
 				'dataIndex' => $field['name'],
@@ -332,9 +332,9 @@ class Model extends Factory
 				'align' => 'center',
 				'defaultHidden' => $defaultHidden,
 			];
-			if ($customRender) {
-				$schema['slots'] = ['customRender' => $customRender];
-			}
+			// if ($customRender) {
+			// 	$schema['slots'] = ['customRender' => $customRender];
+			// }
 			$tableSchema['columns'][] = $schema;
 
 			// if ($defaultHidden == false) {

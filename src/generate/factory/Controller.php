@@ -53,6 +53,7 @@ class Controller extends Factory
 		    "title": "%s",
 		    "version": "1.0.0",
 		    "layer": "%s",
+		    "name": "%s",
 		    "module": "%s",
 		    "group": "%s",
 		    "desc": "查询参数详见快速查询 字段含义参加字段映射"
@@ -118,15 +119,15 @@ class Controller extends Factory
 		$repositoryFile = $this->getGeneratePath($params['controller_repository']);
 		$content = $this->getContent($params);
 		$contentPath = $this->getGeneratePath($params['controller']);
-		// echo $repository;
+		// echo $content;
 		// dd();
 
 		try {
 			if (! FileSystem::put($repositoryFile, $repository)) {
 				throw new FailedException($params['controller_repository'] . ' generate failed~');
 			}
-			if (! file_exists($contentPath)) {
-				// if ($params['table'] !== 'user_account') {
+			// if (! file_exists($contentPath)) {
+			if (! in_array($params['table'], ['user_account', 'user_access'], true)) {
 				FileSystem::put($contentPath, $content);
 			}
 			return $contentPath;
@@ -147,6 +148,7 @@ class Controller extends Factory
 		if (! $params['service']) {
 			throw new FailedException('params has lost～');
 		}
+		// dd($params);
 		[$classNameRoute] = $this->parseFilename($params['controller']);
 		[$className, $classNamespace] = $this->parseFilename($params['controller_repository']);
 		$use = $params['service'];
@@ -177,8 +179,8 @@ class Controller extends Factory
 			->addComment('@var ' . $namespace->unresolveName($use));
 		if ($is_layout) {
 			$method = $class->addMethod('layout')
-				->addComment(sprintf('@Route("/%s/layout", method="GET", ignore_verify=false)', Str::snake($className)))
-				->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '页面布局', 'layout', $this->pageParam)))
+				->addComment(sprintf('@Route("/%s/layout", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
+				->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '布局', 'layout', $this->pageParam)))
 				->addComment('@return \think\Response')
 				->setReturnType('think\Response')
 				->setReturnNullable()
@@ -188,7 +190,7 @@ class Controller extends Factory
 		}
 		$method = $class->addMethod('index')
 			->addComment(sprintf('@Route("/%s", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '分页列表', 'index', $this->pageParam)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '分页', 'index', $this->pageParam)))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -197,7 +199,7 @@ class Controller extends Factory
 			->setType(Request::class);
 		$method = $class->addMethod('info')
 			->addComment(sprintf('@Route("/%s/:id", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '详情', 'info', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '详情', 'info', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -208,7 +210,7 @@ class Controller extends Factory
 			->setType('int');
 		$method = $class->addMethod('save')
 			->addComment(sprintf('@Route("/%s", method="POST", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '保存', 'save', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '添加' . $params['extra']['title'], 'save', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -217,7 +219,7 @@ class Controller extends Factory
 			->setType(Request::class);
 		$method = $class->addMethod('update')
 			->addComment(sprintf('@Route("/%s/:id", method="PUT", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '更新', 'update', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '修改' . $params['extra']['title'], 'update', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -228,7 +230,7 @@ class Controller extends Factory
 			->setType('int');
 		$method = $class->addMethod('delete')
 			->addComment(sprintf('@Route("/%s/:id", method="DELETE", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '删除', 'delete', '')))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '删除' . $params['extra']['title'], 'delete', '')))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()
@@ -294,7 +296,7 @@ class Controller extends Factory
 				$this->classDocs,
 				$params['extra']['title'],
 				$params['extra']['layer'],
-				// $params['module']['title'],
+				Str::snake($className),
 				Str::snake($params['extra']['module']),
 				Str::snake($className)
 			)));
@@ -305,7 +307,7 @@ class Controller extends Factory
 			->addComment('@var ' . $namespace->unresolveName($use));
 		$method = $class->addMethod('list')
 			->addComment(sprintf('@Route("/%s/list", method="GET", ignore_verify=false)', Str::snake($className)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '列表无分页', 'list', $this->pageParam)))
+			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '列表', 'list', $this->pageParam)))
 			->addComment('@return \think\Response')
 			->setReturnType('think\Response')
 			->setReturnNullable()

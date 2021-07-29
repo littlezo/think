@@ -95,7 +95,7 @@ class Module
 		try {
 			$this->module = $params['module'];
 
-			$this->name = $params['title'] ?? $params['module'];
+			$this->name =mb_substr($params['title'] ?? $params['module'], 0, 2, 'utf-8');
 			$this->layer = $params['layer'];
 			$this->description = $params['description'] ?? $this->name;
 			$this->namespaces = $params['namespaces']??'little';
