@@ -88,7 +88,6 @@ trait BaseOptionsTrait
 	 */
 	public function updateBy($id, $data, $field = ''): bool
 	{
-		// dd($this->filterData($data));
 		if (static::update($this->filterData($data), [$field ?: $this->getAutoPk() => $id], $this->field)) {
 			$this->updateChildren($id, $data);
 
@@ -119,7 +118,6 @@ trait BaseOptionsTrait
 	 */
 	public function deleteBy($id, $force = false)
 	{
-		// dd(Utils::stringToArrayBy((string) $id));
 		return static::destroy(is_array($id) ? $id : Utils::stringToArrayBy((string) $id), $force);
 	}
 
@@ -331,7 +329,6 @@ trait BaseOptionsTrait
 			if (is_null($value)) {
 				unset($data[$field]);
 			}
-			// dd(property_exists($this, $field));
 			if (! in_array($field, $this->field, true)) {
 				// unset($data[$field]);
 			}
