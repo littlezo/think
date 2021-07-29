@@ -40,7 +40,6 @@ class Query extends \think\db\Query
 		$this->options['field'] = array_merge($this->options['field'] ?? [], array_map(function ($value) use ($table, $tableAlias) {
 			return ($tableAlias ?: $table) . '.' . $value;
 		}, $field));
-		// dd($tableAlias ? sprintf('%s %s', $table, $tableAlias) : $table, sprintf('%s.%s=%s.%s', $tableAlias ? $tableAlias : $table, $joinField, $this->getAlias(), $currentJoinField), $type, $bind);
 		return $this->join($tableAlias ? sprintf('%s %s', $table, $tableAlias) : $table, sprintf('%s.%s=%s.%s', $tableAlias ? $tableAlias : $table, $joinField, $this->getAlias(), $currentJoinField), $type, $bind);
 	}
 
@@ -134,19 +133,16 @@ class Query extends \think\db\Query
 	public function quickSearch($params = []): Query
 	{
 		$requestParams = \request()->param();
-		// dd($requestParams);
+		$params = array_merge($params, $requestParams);
 		if (empty($params) && empty($requestParams)) {
 			return $this;
 		}
-
-		foreach ($requestParams as $field => $value) {
+		foreach ($params as $field => $value) {
 			// 排除不存在字段
-			// echo str_replace(['start_,end_,like_,max_,min_,size,page,left_like_,right_like_,'], '', $field) . PHP_EOL;
-			// dd($this->model->field);
-			if (! in_array(str_replace(['start_,end_,like_,left_like_,right_like_,max_,min_,size,page'], '', $field), $this->model->field, true, )) {
+			if (! in_array(str_replace(['start_', 'end_', 'left_like_', 'right_like_', 'like_', 'max_', 'min_', 'size', 'page'], '', $field), $this->model->field, true, )) {
 				continue;
 			}
-			if (isset($params[$field])) {
+			if (in_array($params[$field], $this->model->field, true, )) {
 				// ['>', value] || value
 				if (is_array($params[$field])) {
 					$this->where($field, $params[$field][0], $params[$field][1]);
@@ -154,12 +150,8 @@ class Query extends \think\db\Query
 					$this->where($field, $value);
 				}
 			} else {
-				// dd($this->model->field);
 				[$condition] = explode('_', $field);
-				// $startPos = strpos($field, 'start_');
-				// $endPos = strpos($field, 'end_');
 				// 时间区间范围 start_数据库字段 & end_数据库字段
-				// echo $condition . PHP_EOL;
 				if ($condition === 'start') {
 					if (is_timestamp($value)) {
 						$this->where(str_replace('start_', '', $field), '>=', (int) $value);
@@ -192,7 +184,6 @@ class Query extends \think\db\Query
 				}
 			}
 		}
-		// dd($this);
 		return $this;
 	}
 
@@ -270,7 +261,6 @@ class Query extends \think\db\Query
 			$limit = \request()->param('size');
 			$listRows = $limit ?: BaseModel::$limit;
 		}
-		// dd($simple);
 		return parent::paginate($listRows, $simple);
 	}
 
@@ -290,7 +280,6 @@ class Query extends \think\db\Query
 		} else {
 			$this->order($sort, $order);
 		}
-		// dd($sort);
 
 		return $this;
 	}
@@ -336,6 +325,5 @@ class Query extends \think\db\Query
 	public function getAutoPk()
 	{
 		return $this->getPk($this->getTable());
-		// $this->connection->getPk($this->getTable());
 	}
 }
