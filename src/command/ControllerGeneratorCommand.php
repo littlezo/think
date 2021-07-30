@@ -62,7 +62,7 @@ class ControllerGeneratorCommand extends Command
 		}
 		$params = [
 			'controller' => 'little\\' . $module . '\\' . $layer . '\\controller\\' . $controller,
-			'controller_repository' => 'little\\' . $module . '\\repository\\' . $layer . '\\' . $controller . 'Traits',
+			// 'controller_repository' => 'little\\' . $module . '\\repository\\' . $layer . '\\' . $controller . 'Traits',
 			'model' => 'little\\' . $module . '\\model\\' . $model,
 			'extra' => [
 			],

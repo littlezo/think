@@ -30,6 +30,13 @@ use littler\facade\FileSystem;
 use littler\JWTAuth\Middleware\Jwt;
 use littler\Request;
 use littler\Response;
+use littler\traits\DeleteTrait;
+use littler\traits\InfoTrait;
+use littler\traits\LayoutTrait;
+use littler\traits\ListTrait;
+use littler\traits\PageTrait;
+use littler\traits\SaveTrait;
+use littler\traits\UpdateTrait;
 use Nette\PhpGenerator\PhpFile;
 use think\helper\Str;
 
@@ -115,23 +122,16 @@ class Controller extends Factory
 		if (! $params['controller']) {
 			return false;
 		}
-		$repository = $this->getTraitContent($params);
-		$repositoryFile = $this->getGeneratePath($params['controller_repository']);
 		$content = $this->getContent($params);
 		$contentPath = $this->getGeneratePath($params['controller']);
 		// echo $content;
-		// dd();
+		// dd($params);
 
 		try {
-			if (! FileSystem::put($repositoryFile, $repository)) {
-				throw new FailedException($params['controller_repository'] . ' generate failed~');
-			}
-			// if (! file_exists($contentPath)) {
 			if (! in_array($params['table'], ['user_account', 'user_access'], true)) {
 				FileSystem::put($contentPath, $content);
 			}
 			return $contentPath;
-			// dd();
 		} catch (\Throwable $exception) {
 			throw new \Exception((string) $exception->getTraceAsString());
 		}
@@ -143,113 +143,10 @@ class Controller extends Factory
 	 * @param $params
 	 * @return bool|string|string[]
 	 */
-	public function getTraitContent($params)
-	{
-		if (! $params['service']) {
-			throw new FailedException('params has lost～');
-		}
-		// dd($params);
-		[$classNameRoute] = $this->parseFilename($params['controller']);
-		[$className, $classNamespace] = $this->parseFilename($params['controller_repository']);
-		$use = $params['service'];
-		$is_layout = $params['extra']['is_layout'];
-
-		if (! $className) {
-			throw new FailedException('未填写控制器名称');
-		}
-
-		$content = new PhpFile();
-		$content->setStrictTypes();
-		$content->addComment($this->header);
-		$namespace = $content->addNamespace($classNamespace);
-
-		$namespace->addUse(Request::class)
-			->addUse(Response::class);
-
-		if ($use) {
-			$namespace->addUse($use);
-		}
-		// $namespace->addUse(Jwt::class);
-		$class = $namespace->addClass($className)
-			->setTrait()
-			->addComment('desc 禁止在此写业务逻辑，执行生成后将被覆盖');
-		$class->addProperty('service')
-			->setProtected()
-			->addComment('@Inject()')
-			->addComment('@var ' . $namespace->unresolveName($use));
-		if ($is_layout) {
-			$method = $class->addMethod('layout')
-				->addComment(sprintf('@Route("/%s/layout", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-				->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '布局', 'layout', $this->pageParam)))
-				->addComment('@return \think\Response')
-				->setReturnType('think\Response')
-				->setReturnNullable()
-				->setBody('return Response::success($this->service->layout($request->param("type")));');
-			$method->addParameter('request')
-				->setType(Request::class);
-		}
-		$method = $class->addMethod('index')
-			->addComment(sprintf('@Route("/%s", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '分页', 'index', $this->pageParam)))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::paginate($this->service->paginate($request->get()));');
-		$method->addParameter('request')
-			->setType(Request::class);
-		$method = $class->addMethod('info')
-			->addComment(sprintf('@Route("/%s/:id", method="GET", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '详情', 'info', '')))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::success($this->service->info($id));');
-		$method->addParameter('request')
-			->setType(Request::class);
-		$method->addParameter('id')
-			->setType('int');
-		$method = $class->addMethod('save')
-			->addComment(sprintf('@Route("/%s", method="POST", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '添加' . $params['extra']['title'], 'save', '')))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::success($this->service->save($request->post()));');
-		$method->addParameter('request')
-			->setType(Request::class);
-		$method = $class->addMethod('update')
-			->addComment(sprintf('@Route("/%s/:id", method="PUT", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '修改' . $params['extra']['title'], 'update', '')))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::success($this->service->update($id,$request->post()));');
-		$method->addParameter('request')
-			->setType(Request::class);
-		$method->addParameter('id')
-			->setType('int');
-		$method = $class->addMethod('delete')
-			->addComment(sprintf('@Route("/%s/:id", method="DELETE", ignore_verify=false)', Str::snake($classNameRoute)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, '删除' . $params['extra']['title'], 'delete', '')))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::success($this->service->delete($id));');
-		$method->addParameter('request')
-			->setType(Request::class);
-		$method->addParameter('id')
-			->setType('int');
-		return $content;
-	}
-
-	/**
-	 * 获取内容.
-	 *
-	 * @param $params
-	 * @return bool|string|string[]
-	 */
 	public function getContent($params)
 	{
+		$is_layout = $params['extra']['is_layout'];
+
 		if (! $params['service']) {
 			throw new FailedException('params has lost～');
 		}
@@ -275,22 +172,25 @@ class Controller extends Factory
 			->addUse(Response::class)
 			->addUse(ApiDocs::class)
 			->addUse(BaseController::class, 'Controller')
-			->addUse($params['controller_repository']);
+			->addUse(LayoutTrait::class)
+			->addUse(PageTrait::class)
+			->addUse(ListTrait::class)
+			->addUse(SaveTrait::class)
+			->addUse(InfoTrait::class)
+			->addUse(UpdateTrait::class)
+			->addUse(DeleteTrait::class);
 
 		if ($use) {
 			$namespace->addUse($use);
 		}
 		$namespace->addUse(Jwt::class);
-		// var_dump($params['module']);
-		// var_dump($params['module']['title']);
-		// dd();
+		$namespace->addClass($className)
+			->setExtends(BaseController::class);
 		$class = $namespace->addClass($className)
 			->setExtends(BaseController::class)
-			->addTrait($params['controller_repository'])
 			->addComment(sprintf('Class %s', $className))
 			->addComment(sprintf('@package %s', $classNamespace))
-			->addComment(sprintf('@RouteGroup("%s")', $params['extra']['layer'] . '/' . $params['extra']['module']))
-			// ->addComment(sprintf('@Resource("%s")', $className=='Index' ? $params['extra']['module'] . '/index' : $params['extra']['module']))
+			->addComment(sprintf('@RouteGroup("%s")', $params['extra']['layer'] . '/' . $params['extra']['module'] . '/' . Str::snake($className)))
 			->addComment(sprintf('@Middleware({littler\JWTAuth\Middleware\Jwt::class,"%s"})', $params['extra']['auth']))
 			->addComment(sprintf('@apiDocs({%s})', sprintf(
 				$this->classDocs,
@@ -300,20 +200,21 @@ class Controller extends Factory
 				Str::snake($params['extra']['module']),
 				Str::snake($className)
 			)));
-		// ->addComment('desc 禁止在控制器写业务逻辑，执行生成后将被覆盖');
+
+		if ($is_layout) {
+			$class->addTrait(LayoutTrait::class);
+		}
+		$class->addTrait(PageTrait::class)
+		->addTrait(InfoTrait::class)
+			->addTrait(SaveTrait::class)
+			->addTrait(UpdateTrait::class)
+			->addTrait(DeleteTrait::class);
 		$class->addProperty('service')
 			->setProtected()
 			->addComment('@Inject()')
 			->addComment('@var ' . $namespace->unresolveName($use));
-		$method = $class->addMethod('list')
-			->addComment(sprintf('@Route("/%s/list", method="GET", ignore_verify=false)', Str::snake($className)))
-			->addComment(sprintf('@apiDocs({%s})', sprintf($this->methodDocs, $params['extra']['title'] . '列表', 'list', $this->pageParam)))
-			->addComment('@return \think\Response')
-			->setReturnType('think\Response')
-			->setReturnNullable()
-			->setBody('return Response::success($this->service->list($request->get()));');
-		$method->addParameter('request')
-			->setType(Request::class);
+
+		// echo $content;
 		return $content;
 	}
 }

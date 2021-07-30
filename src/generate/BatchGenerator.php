@@ -115,13 +115,13 @@ class BatchGenerator
 					$layer,
 					Str::studly($class)
 				),
-				'controller_repository' => sprintf(
-					'%s\\%s\\repository\\%s\\%sTrait',
-					$namespace,
-					$module,
-					$layer,
-					Str::studly($class)
-				),
+				// 'controller_repository' => sprintf(
+				// 	'%s\\%s\\repository\\%s\\%sTrait',
+				// 	$namespace,
+				// 	$module,
+				// 	$layer,
+				// 	Str::studly($class)
+				// ),
 				'event' =>  sprintf('%s\\%s\\event\\%s', $namespace, $module, Str::studly($class)),
 				'service' =>  sprintf('%s\\%s\\service\\%s\\%sService', $namespace, $module, $layer, Str::studly($class)),
 				'table' => Str::snake($name),
@@ -170,7 +170,7 @@ class BatchGenerator
 					$message[] = $this->execute($generate);
 				} else {
 					$generate['controller']=null;
-					$generate['controller_repository']=null;
+					// $generate['controller_repository']=null;
 					// dd($generate);
 					$message[] = $this->execute($generate);
 				}
