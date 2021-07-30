@@ -32,7 +32,7 @@ trait InfoTrait
 	 *     "version": "v1.0.0",
 	 *     "name": "info",
 	 *     "headers": {
-	 *         "Authorization": "Bearer Token"
+	 *         "Authorization": "Bearer Token",
 	 *     },
 	 *     "desc": "查询参数详见快速查询 字段含义参加字段映射",
 	 *     "success": {
@@ -49,7 +49,7 @@ trait InfoTrait
 	 *         "message": "错误消息",
 	 *         "type": "error",
 	 *         "result": "",
-	 *         "timestamp": 1234567890
+	 *         "timestamp": 1234567890,
 	 *     },
 	 *     "param": {
 	 *
