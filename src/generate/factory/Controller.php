@@ -128,7 +128,8 @@ class Controller extends Factory
 		// dd($params);
 
 		try {
-			if (! in_array($params['table'], ['user_account', 'user_access'], true)) {
+			if (! file_exists($contentPath)) {
+				// if (! in_array($params['table'], ['user_account', 'user_access'], true)) {
 				FileSystem::put($contentPath, $content);
 			}
 			return $contentPath;
