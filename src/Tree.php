@@ -19,13 +19,13 @@ namespace littler;
 
 class Tree
 {
-	public static function done(array $items, $pid = 0, $pidField = 'parent', $children = 'children')
+	public static function done(array $items, $pid = 0, $pk ='id', $pidField = 'parent', $children = 'children')
 	{
 		$tree = [];
 
 		foreach ($items as $key => $item) {
 			if ($item[$pidField] == $pid) {
-				$child = self::done($items, $item['id'], $pidField);
+				$child = self::done($items, $item[$pk], $pk, $pidField);
 				if (count($child)) {
 					$item[$children] = $child;
 				}

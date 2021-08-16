@@ -31,9 +31,9 @@ class ModelCollection extends Collection
 	 * @param string $pidField
 	 * @param string $children
 	 */
-	public function toTree($pid = 0, $pidField = 'parent', $children = 'children'): array
+	public function toTree($pid = 0, $pk = 'id', $pidField = 'parent', $children = 'children'): array
 	{
-		return Tree::done($this->toArray(), $pid, $pidField, $children);
+		return Tree::done($this->toArray(), $pid, $pk, $pidField, $children);
 	}
 
 	/**
