@@ -45,6 +45,27 @@ class Model extends Factory
 
 		EOF;
 
+	private $actions = <<<'EOF'
+		"[
+		    {
+		        icon: 'clarity:note-edit-line',
+		        label: '修改',
+		        auth: '%s:update',
+		        onClick: handleEdit.bind(null, record),
+		    },
+		    {
+		        label: '删除',
+		        icon: 'ant-design:delete-outlined',
+		        color: 'error',
+		        auth: '%s:delete',
+		        popConfirm: {
+		            title: '是否确认删除',
+		            confirm: handleDelete.bind(null, record),
+		        },
+		    },
+		]",
+		EOF;
+
 	/**
 	 * done.
 	 *
@@ -202,7 +223,6 @@ class Model extends Factory
 	public function getContent($params)
 	{
 		$table = Utils::tableWithPrefix($params['table']);
-
 		[$className, $classNamespace] = $this->parseFilename($params['model']);
 		// 如果填写了表名并且没有填写模型名称 使用表名作为模型名称
 		if (! $className && $table) {
@@ -212,13 +232,11 @@ class Model extends Factory
 		if (! $className) {
 			throw new FailedException('model name not set');
 		}
-
 		$repository = $params['model_repository'];
 		$content = new PhpFile();
 		$content->setStrictTypes();
 		$content->addComment($this->header);
 		$namespace = $content->addNamespace($classNamespace);
-
 		$class = $namespace->addUse($repository)
 			->addClass($className)
 			->setExtends($repository)
@@ -243,11 +261,33 @@ class Model extends Factory
 
 	protected function tableSchema($table)
 	{
+		$tag = Utils::tableWithoutPrefix($table);
+		$pos = strpos($tag, '_', );
+		$auth = substr($tag, 0, $pos) . ':' . substr($tag, $pos + 1);
+
 		$fields = Db::getFields($table);
+		$dumper = new Dumper();
+		$actions = [
+				[
+					'icon' => 'clarity:note-edit-line',
+					'label' => '修改',
+					'auth' => "$auth:update",
+					'onClick' => 'handleEdit.bind(null, record)',
+				],
+				[
+					'label' => '删除',
+					'icon' => 'ant-design:delete-outlined',
+					'color' => 'error',
+					'auth' => "$auth:delete",
+					'popConfirm' => [
+						'title' => '是否确认删除',
+						'confirm' => 'handleDelete.bind(null, record)',
+					],
+				],
+			];
 		$tableSchema = [
 			'columns' => [],
-			'formConfig' => [
-			],
+			'formConfig' => [],
 			'pagination' => true,
 			'striped' => true,
 			'useSearchForm' => true,
@@ -255,7 +295,7 @@ class Model extends Factory
 			'bordered' => true,
 			'showIndexColumn' => false,
 			'canResize' => true,
-			'rowKey'=>'id',
+			'rowKey' => 'id',
 			'searchInfo' => ['order' => 'asc'],
 			'actionColumn' => [
 				'width' => 100,
@@ -264,13 +304,15 @@ class Model extends Factory
 				'slots' => ['customRender' => 'action'],
 				'fixed' => 'right',
 			],
-		];
-		$children = [];
+			// sprintf($this->actions, $auth, $auth)
+			'dropActions' =>  json_encode($actions, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES),
 
+			'actions' => '[]',
+		];
+		// dd($tableSchema);
+		$children = [];
 		foreach ($fields as $field) {
-			// dd($fields);
 			$field_type = explode(':', str_replace([' ', '(', ')'], ':', $field['type']));
-			// dd($field_type);
 			$title = ($field['primary'] ? 'ID' : $field['comment']) ?: Str::studly($field['name']);
 			$width = 80;
 			$defaultHidden = true;
@@ -305,7 +347,7 @@ class Model extends Factory
 			} else {
 				$fixed = 'left';
 				$defaultHidden = false;
-				$tableSchema['rowKey']= $field['name'];
+				$tableSchema['rowKey'] = $field['name'];
 			}
 			if (strpos($field['name'], 'openid')) {
 				$defaultHidden = true;
@@ -353,6 +395,12 @@ class Model extends Factory
 		$fields = Db::getFields($table);
 		$searchSchema = [
 			'labelWidth' => 100,
+			'baseColProps' => [
+				'xxl' => 6,
+				'xl' => 8,
+				'lg' => 12,
+				'md' => 34,
+			],
 			'schemas' => [],
 		];
 
@@ -366,11 +414,6 @@ class Model extends Factory
 				'field' => $field['name'],
 				'label' => $title,
 				'component' => 'Input',
-				'colProps' => [
-					'lg' => 12,
-					'xl' => 8,
-					'xxl' => 6,
-				],
 			];
 			$searchSchema['schemas'][] = $schema;
 		}
@@ -382,6 +425,12 @@ class Model extends Factory
 		$fields = Db::getFields($table);
 		$formSchema = [
 			'labelWidth' => 120,
+			'baseColProps' => [
+				'xxl' => 6,
+				'xl' => 8,
+				'lg' => 12,
+				'md' => 34,
+			],
 			'schemas' => [],
 		];
 
@@ -405,11 +454,6 @@ class Model extends Factory
 				'label' => $title,
 				'component' => 'Input',
 				'required' => $required,
-				'colProps' => [
-					'lg' => 12,
-					'xl' => 8,
-					'xxl' => 6,
-				],
 			];
 			$formSchema['schemas'][] = $schema;
 		}
