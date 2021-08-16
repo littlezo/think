@@ -35,8 +35,7 @@ trait RewriteTrait
 	public function __construct(array $data = [])
 	{
 		parent::__construct($data);
-
-		$this->hidden = array_merge($this->hidden, $this->defaultHiddenFields());
+		$this->hidden = array_merge($this->hidden, $this->without, $this->defaultHiddenFields());
 	}
 
 	/**
@@ -84,10 +83,12 @@ trait RewriteTrait
 	 */
 	protected function defaultHiddenFields(): array
 	{
+		if (method_exists($this, 'withTrashed')) {
+			return [];
+		}
 		if ($this->hasField($this->deleteTime)) {
 			return [$this->deleteTime];
 		}
-
 		return [];
 	}
 }
