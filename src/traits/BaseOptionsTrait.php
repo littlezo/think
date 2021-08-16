@@ -88,6 +88,7 @@ trait BaseOptionsTrait
 	 */
 	public function updateBy($id, $data, $field = ''): bool
 	{
+		// dd($this->filterData($data));
 		if (static::update($this->filterData($data), [$field ?: $this->getAutoPk() => $id], $this->field)) {
 			$this->updateChildren($id, $data);
 
@@ -330,7 +331,7 @@ trait BaseOptionsTrait
 				unset($data[$field]);
 			}
 			if (! in_array($field, $this->field, true)) {
-				// unset($data[$field]);
+				unset($data[$field]);
 			}
 			if ($field == $this->getAutoPk()) {
 				unset($data[$field]);
