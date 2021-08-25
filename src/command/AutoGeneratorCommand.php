@@ -46,25 +46,29 @@ class AutoGeneratorCommand extends Command
 
 	protected function execute(Input $input, Output $output)
 	{
-		$namespace = $input->getArgument('namespace');
-		$layer = $input->getArgument('layer');
-		$auth =   $output->ask($input, '请输入 jwt 授权应用 默认 default') ?: 'default';
-		// $output->ask($input, ' false') ?: 'y';
+		try {
+			$namespace = $input->getArgument('namespace');
+			$layer = $input->getArgument('layer');
+			$auth =   $output->ask($input, '请输入 jwt 授权应用 默认 default') ?: 'default';
+			// $output->ask($input, ' false') ?: 'y';
 
-		$asn =  $this->output->ask($this->input, '是否获取页面布局(Y/N) 默认 N') ?? 'N';
+			$asn =  $this->output->ask($this->input, '是否获取页面布局(Y/N) 默认 N') ?? 'N';
 
-		$is_layout = false;
-		if (strtolower($asn) == 'y') {
-			$is_layout = true;
+			$is_layout = false;
+			if (strtolower($asn) == 'y') {
+				$is_layout = true;
+			}
+			// 判断是否安装了扩展包
+			if (! (new Composer())->hasPackage(self::RELY_PACKAGE)) {
+				$output->error(sprintf('you must use [ composer require --dev %s]', self::RELY_PACKAGE));
+				exit(0);
+			}
+			$message = (new BatchGenerator())->done($namespace, $layer, $auth, $is_layout);
+			// dd($message);
+			$output->info($message);
+			$output->info('success');
+		} catch (\Throwable $e) {
+			var_dump($e->getTraceAsString());
 		}
-		// 判断是否安装了扩展包
-		if (! (new Composer())->hasPackage(self::RELY_PACKAGE)) {
-			$output->error(sprintf('you must use [ composer require --dev %s]', self::RELY_PACKAGE));
-			exit(0);
-		}
-		$message = (new BatchGenerator())->done($namespace, $layer, $auth, $is_layout);
-		// dd($message);
-		$output->info($message);
-		$output->info('success');
 	}
 }
