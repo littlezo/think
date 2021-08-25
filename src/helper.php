@@ -1325,7 +1325,11 @@ function isHexString($str)
 
 function is_timestamp($timestamp)
 {
-	if (strtotime(date('Y-m-d H:i:s', (int) $timestamp)) === (int) $timestamp) {
+	// Response::file();
+	if (! is_int($timestamp)) {
+		return false;
+	}
+	if (strtotime(date('Y-m-d H:i:s', $timestamp)) ===  $timestamp) {
 		return (int) $timestamp;
 	}
 	return false;
