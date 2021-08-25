@@ -58,9 +58,6 @@ class BatchGenerator
 			$table = Utils::tableWithoutPrefix($item);
 			$table_info = explode('_', $table);
 			$module = explode('_', $table)[0];
-			if (! in_array($module, ['member', 'order', 'finance'], true)) {
-				continue;
-			}
 			$table_comment = sprintf(
 				"Select table_name %s ,TABLE_COMMENT from INFORMATION_SCHEMA.TABLES Where table_schema = '%s' AND table_name LIKE '%s'",
 				$item,
@@ -86,7 +83,6 @@ class BatchGenerator
 				];
 			}
 			if (! isset($generate_items[$module]['info']['module'])) {
-				var_dump($module);
 				$generate_items[$module]['info'] = [
 					'title' => $title[0]['TABLE_COMMENT'] ?? $name,
 					'namespace' => $namespace,
