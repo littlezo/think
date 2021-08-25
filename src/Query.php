@@ -139,7 +139,8 @@ class Query extends \think\db\Query
 		}
 		foreach ($params as $field => $value) {
 			// 排除不存在字段
-			if (! in_array(str_replace(['start_', 'end_', 'left_like_', 'right_like_', 'like_', 'max_', 'min_', 'size', 'page'], '', $field), $this->model->field, true, )) {
+			// dd($params);
+			if (! in_array(str_replace(['start_', 'end_', 'left_like_', 'right_like_', 'like_', 'max_', 'min_', 'between_', 'size', 'page'], '', $field), $this->model->field, true, )) {
 				continue;
 			}
 			if (in_array($params[$field], $this->model->field, true, )) {
@@ -152,19 +153,13 @@ class Query extends \think\db\Query
 			} else {
 				[$condition] = explode('_', $field);
 				// 时间区间范围 start_数据库字段 & end_数据库字段
-				if ($condition === 'start') {
-					if (is_timestamp($value)) {
-						$this->where(str_replace('start_', '', $field), '>=', (int) $value);
-					} else {
-						$this->where(str_replace('start_', '', $field), '>=', strtotime($value));
-					}
+				if ($condition === 'between') {
+					$this->whereTime(str_replace('between_', '', $field), 'between', $value);
+				} elseif ($condition === 'start') {
+					$this->whereTime(str_replace('start_', '', $field), '>=', $value);
 				} elseif ($condition === 'end') {
-					if (is_timestamp($value)) {
-						$this->where(str_replace('end_', '', $field), '>=', (int) $value);
-					} else {
-						$this->where(str_replace('end_', '', $field), '>=', strtotime($value));
-					}
-					// 模糊搜索
+					$this->whereTime(str_replace('end_', '', $field), '<', $value);
+				// 模糊搜索
 				} elseif ($condition === 'like') {
 					$this->whereLike(str_replace('like_', '', $field), $value);
 				// 左模糊搜索
@@ -184,6 +179,7 @@ class Query extends \think\db\Query
 				}
 			}
 		}
+		// dd($this->fetchSql(true)->find(1));
 		return $this;
 	}
 
