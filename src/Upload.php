@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace littler;
 
-use little\system\model\Config;
 use littler\exceptions\FailedException;
 use littler\exceptions\ValidateFailedException;
 use think\exception\ValidateException;
